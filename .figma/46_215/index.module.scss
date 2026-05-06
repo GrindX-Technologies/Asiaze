@@ -1,0 +1,238 @@
+* {
+  box-sizing: border-box;
+}
+
+.vector7 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: #ffffff;
+  padding-top: 18px;
+  width: 375px;
+  height: 667px;
+  overflow: hidden;
+
+  .frame3 {
+    margin-top: 3px;
+    width: 16px;
+    height: 16px;
+    overflow: hidden;
+  }
+
+  .savedArticles {
+    line-height: 19px;
+    letter-spacing: 0;
+    color: #000000;
+    font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+    font-size: 16px;
+  }
+
+  .autoWrapper {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    justify-content: space-between;
+    padding-right: 158px;
+    padding-left: 24px;
+
+    .frame {
+      width: 14px;
+      height: 14px;
+      overflow: hidden;
+    }
+
+    .profile {
+      line-height: 23px;
+      letter-spacing: 0;
+      color: #000000;
+      font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+  }
+
+  .vector {
+    margin-top: 19px;
+    box-shadow: 0px 0px 0px 0px #00000014;
+    background: #e5e7eb;
+    width: 375px;
+    height: 1px;
+  }
+
+  .group {
+    display: flex;
+    align-items: flex-start;
+    align-self: stretch;
+    margin: 24px 138px 0px 137px;
+    border-radius: 50%;
+    box-shadow: 0px 0px 0px 0px #00000014;
+    background: #d1d5db;
+    padding: 31px 30px 35px 31px;
+
+    .aB {
+      line-height: 35px;
+      letter-spacing: 0;
+      color: #ffffff;
+      font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 30px;
+    }
+  }
+
+  .alexBrown {
+    margin: 19px 0px 0px 142px;
+    line-height: 21px;
+    letter-spacing: 0;
+    color: #000000;
+    font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .alexBrownExampleCom {
+    margin: 6px 0px 0px 105px;
+    line-height: 16px;
+    letter-spacing: 0;
+    color: #6b7280;
+    font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+    font-size: 14px;
+  }
+
+  .autoWrapper2 {
+    display: flex;
+    align-items: flex-start;
+    align-self: stretch;
+    justify-content: space-between;
+    margin-top: 45px;
+    padding-right: 229px;
+    padding-left: 16px;
+
+    .frame2 {
+      margin-top: 5px;
+      width: 12px;
+      height: 12px;
+      overflow: hidden;
+    }
+  }
+
+  .vector2 {
+    margin-top: 20px;
+    margin-left: 16px;
+    box-shadow: 0px 0px 0px 0px #00000014;
+    background: #e5e7eb;
+    width: 343px;
+    height: 1px;
+  }
+
+  .autoWrapper3 {
+    display: flex;
+    align-items: flex-start;
+    align-self: stretch;
+    justify-content: space-between;
+    margin-top: 18px;
+    padding-right: 268px;
+    padding-left: 16px;
+  }
+
+  .autoWrapper4 {
+    display: flex;
+    align-items: flex-start;
+    align-self: stretch;
+    margin-top: 18px;
+    padding-right: 159px;
+    padding-left: 16px;
+
+    .yourState {
+      margin: 0px 0px 0px 16px;
+      line-height: 19px;
+      letter-spacing: 0;
+      color: #000000;
+      font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 16px;
+    }
+
+    .westBengal {
+      margin: 2px 0px 0px 8px;
+      line-height: 16px;
+      letter-spacing: 0;
+      color: #dc143c;
+      font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 14px;
+    }
+  }
+
+  .vector3 {
+    margin-top: 24px;
+    margin-left: 16px;
+    background: #e5e7eb;
+    width: 343px;
+    height: 1px;
+  }
+
+  .vector4 {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    margin: 90px 16px 0px;
+    padding: 14px 133px 14px 134px;
+    background-image: url(../image/mouaame1-ucra4q2.svg);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    filter: drop-shadow(0px 0px 0px #00000014);
+
+    .logout {
+      width: 76px;
+      text-align: center;
+      letter-spacing: 0;
+      color: #ffffff;
+      font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+    }
+  }
+
+  .vector6 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-self: stretch;
+    margin-top: 20px;
+    background: #ffffff;
+    padding-bottom: 21px;
+    overflow: hidden;
+
+    .vector5 {
+      background: #d3d3d3;
+      width: 375px;
+      height: 1px;
+    }
+
+    .autoWrapper5 {
+      display: flex;
+      align-items: center;
+      align-self: stretch;
+      justify-content: space-between;
+      margin-top: 19px;
+      padding-right: 77px;
+      padding-left: 0;
+
+      .frame4 {
+        width: 18px;
+        height: 18px;
+        overflow: hidden;
+      }
+
+      .frame5 {
+        width: 21px;
+        height: 21px;
+        overflow: hidden;
+      }
+
+      .frame6 {
+        width: 16px;
+        height: 16px;
+        overflow: hidden;
+      }
+    }
+  }
+}

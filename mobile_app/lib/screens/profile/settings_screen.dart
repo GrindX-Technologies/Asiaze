@@ -1,0 +1,231 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../auth/login_screen.dart';
+import '../explore/category_detail_screen.dart';
+
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  String _selectedLang = 'EN';
+  bool _notificationsEnabled = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'Settings',
+          style: GoogleFonts.lexendDeca(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Colors.black,
+          ),
+        ),
+        centerTitle: true,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 8),
+            // Language
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                children: [
+                  const Icon(Icons.translate, color: Colors.black),
+                  const SizedBox(width: 16),
+                  Text(
+                    'Language',
+                    style: GoogleFonts.roboto(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const Spacer(),
+                  _buildLangChip('EN'),
+                  const SizedBox(width: 8),
+                  _buildLangChip('HIN'),
+                  const SizedBox(width: 8),
+                  _buildLangChip('BEN'),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Color(0xFFE2E8F0)),
+            
+            // Category Preferences
+            _buildSettingItem(
+              icon: Icons.format_list_bulleted,
+              title: 'Category Preferences',
+              trailing: const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CategoryDetailScreen(categoryName: 'Sports'),
+                  ),
+                );
+              },
+            ),
+            
+            // Notifications
+            _buildSettingItem(
+              icon: Icons.notifications,
+              title: 'Notifications',
+              trailing: Switch(
+                value: _notificationsEnabled,
+                activeThumbColor: const Color(0xFFDC143C),
+                onChanged: (val) {
+                  setState(() {
+                    _notificationsEnabled = val;
+                  });
+                },
+              ),
+              onTap: () {
+                setState(() {
+                  _notificationsEnabled = !_notificationsEnabled;
+                });
+              },
+            ),
+            
+            // Privacy Policy
+            _buildSettingItem(
+              icon: Icons.description,
+              title: 'Privacy Policy',
+              trailing: const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+              onTap: () {},
+            ),
+            
+            // Terms & Conditions
+            _buildSettingItem(
+              icon: Icons.description,
+              title: 'Terms & Conditions',
+              trailing: const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+              onTap: () {},
+            ),
+            
+            // About Us
+            _buildSettingItem(
+              icon: Icons.info_outline,
+              title: 'About Us',
+              trailing: const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+              onTap: () {},
+            ),
+            
+            const SizedBox(height: 40),
+            // Logout Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFDC143C),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Logout',
+                    style: GoogleFonts.lexendDeca(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLangChip(String lang) {
+    final isSelected = _selectedLang == lang;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedLang = lang;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFDC143C) : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          lang,
+          style: GoogleFonts.roboto(
+            color: isSelected ? Colors.white : Colors.black,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingItem({
+    required IconData icon,
+    required String title,
+    required Widget trailing,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.black),
+                const SizedBox(width: 16),
+                Text(
+                  title,
+                  style: GoogleFonts.roboto(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black,
+                  ),
+                ),
+                const Spacer(),
+                trailing,
+              ],
+            ),
+          ),
+        ),
+        const Divider(height: 1, color: Color(0xFFE2E8F0)),
+      ],
+    );
+  }
+}

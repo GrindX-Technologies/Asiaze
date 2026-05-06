@@ -1,0 +1,151 @@
+* {
+  box-sizing: border-box;
+}
+
+.vector3 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background-color: #000000;
+  padding-bottom: 20px;
+  width: 375px;
+  height: 667px;
+  overflow: hidden;
+  background-image: url(../image/moualwmk-a8zpog6.png);
+  background-position: -146px 0px;
+  background-size: 177.87% 100%;
+  background-repeat: no-repeat;
+
+  .vector {
+    background: #dc143c;
+    width: 375px;
+    height: 5px;
+  }
+
+  .vector2 {
+    display: flex;
+    align-items: flex-start;
+    align-self: stretch;
+    margin: 11px 316px 0px 16px;
+    border-radius: 12px;
+    background: #dc143c;
+    padding: 3px 7px 6px 8px;
+
+    .maskGroup {
+      width: 28px;
+      height: 15px;
+    }
+  }
+
+  .group {
+    position: relative;
+    margin-top: 250px;
+    margin-left: 24px;
+    width: 287px;
+    height: 110px;
+
+    .innovativeTech {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 248px;
+      height: 38px;
+      line-height: 38px;
+      letter-spacing: 0;
+      color: #ffffff;
+      font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .trendsToWatchIn {
+      position: absolute;
+      top: 36px;
+      left: 0;
+      width: 287px;
+      height: 38px;
+      line-height: 38px;
+      letter-spacing: 0;
+      color: #ffffff;
+      font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .a2023 {
+      position: absolute;
+      top: 72px;
+      left: 0;
+      width: 71px;
+      height: 38px;
+      line-height: 38px;
+      letter-spacing: 0;
+      color: #ffffff;
+      font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 30px;
+      font-weight: 700;
+    }
+  }
+
+  .byAsiaZe2HoursAgo {
+    margin: 8px 0px 0px 24px;
+    line-height: 18px;
+    letter-spacing: 0;
+    color: #d1d5db;
+    font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+    font-size: 14px;
+  }
+
+  .group2 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    align-self: stretch;
+    margin: 19px 41px 0px 24px;
+
+    .diveIntoTheLatestTec {
+      line-height: 20px;
+      letter-spacing: 0;
+      color: #ffffff;
+      font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 16px;
+    }
+
+    .advancementsThatAreS {
+      margin: 4px 0px 0px;
+      line-height: 20px;
+      letter-spacing: 0;
+      color: #ffffff;
+      font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 16px;
+    }
+  }
+
+  .autoWrapper {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    justify-content: space-between;
+    margin-top: 38px;
+    padding-right: 16px;
+    padding-left: 264px;
+
+    .frame {
+      width: 18px;
+      height: 18px;
+      overflow: hidden;
+    }
+
+    .frame2 {
+      width: 24px;
+      height: 24px;
+      overflow: hidden;
+    }
+
+    .frame3 {
+      width: 21px;
+      height: 21px;
+      overflow: hidden;
+    }
+  }
+}

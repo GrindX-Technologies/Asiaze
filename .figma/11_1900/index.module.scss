@@ -1,0 +1,497 @@
+* {
+  box-sizing: border-box;
+}
+
+.viewNewsPreviewScree {
+  position: relative;
+  width: 1440px;
+  height: 980px;
+  overflow: hidden;
+
+  .vector8 {
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    align-items: flex-start;
+    justify-content: space-between;
+    background: #ffffff;
+    padding: 1px 16px 0px 4px;
+    width: 1440px;
+    height: 980px;
+
+    .autoWrapper4 {
+      position: relative;
+      width: 250px;
+      height: 979px;
+
+      .vector2 {
+        display: flex;
+        position: absolute;
+        top: 0;
+        left: 0;
+        flex-direction: column;
+        align-items: flex-start;
+        box-shadow: 0px 0px 0px 0px #00000014;
+        background: #dc143c;
+        padding: 11px 6px 21px 16px;
+        width: 250px;
+        height: 979px;
+
+        .frame {
+          width: 27px;
+          height: 27px;
+          overflow: hidden;
+        }
+
+        .manageReels {
+          margin: 3px 0px 0px;
+          line-height: 19px;
+          letter-spacing: 0;
+          color: #ffffff;
+          font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 16px;
+        }
+
+        .group {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          margin-right: 84px;
+          box-shadow: 0px 0px 0px 0px #00000014;
+
+          .vector {
+            border-radius: 8px;
+            width: 144px;
+            height: 37px;
+          }
+        }
+
+        .dashboardOverview {
+          margin: 25px 0px 0px 4px;
+          line-height: 19px;
+          letter-spacing: 0;
+          color: #ffffff;
+          font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 16px;
+          font-weight: 700;
+        }
+
+        .maskGroup {
+          margin-top: 67px;
+          margin-left: 12px;
+          width: 216px;
+          height: 23px;
+        }
+
+        .maskGroup2 {
+          margin-top: 4px;
+          margin-left: 12px;
+          width: 216px;
+          height: 23px;
+        }
+
+        .categories {
+          margin: 6px 0px 0px 12px;
+          line-height: 19px;
+          letter-spacing: 0;
+          color: #ffffff;
+          font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 16px;
+        }
+
+        .tagsManagement {
+          margin: 9px 0px 0px 12px;
+          line-height: 19px;
+          letter-spacing: 0;
+          color: #ffffff;
+          font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 16px;
+        }
+
+        .autoWrapper {
+          display: flex;
+          align-items: flex-start;
+          align-self: stretch;
+          justify-content: space-between;
+          margin-top: 24px;
+          padding-right: 19px;
+          padding-left: 4px;
+        }
+
+        .addReel {
+          margin: 8px 0px 0px 12px;
+          line-height: 19px;
+          letter-spacing: 0;
+          color: #ffffff;
+          font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 16px;
+        }
+
+        .allReelsList {
+          margin: 5px 0px 0px 12px;
+          line-height: 19px;
+          letter-spacing: 0;
+          color: #ffffff;
+          font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 16px;
+        }
+
+        .autoWrapper2 {
+          display: flex;
+          align-items: flex-start;
+          align-self: stretch;
+          justify-content: space-between;
+          margin-top: 20px;
+          padding-right: 19px;
+          padding-left: 4px;
+        }
+
+        .blockUnblockUsers {
+          margin: 7px 0px 0px 12px;
+          line-height: 19px;
+          letter-spacing: 0;
+          color: #ffffff;
+          font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 16px;
+        }
+
+        .autoWrapper3 {
+          display: flex;
+          align-items: flex-start;
+          align-self: stretch;
+          justify-content: space-between;
+          margin-top: 19px;
+          padding-right: 17px;
+          padding-left: 4px;
+
+          .maskGroup3 {
+            width: 102px;
+            height: 23px;
+          }
+        }
+
+        .pastNotifications {
+          margin: 13px 0px 0px 12px;
+          line-height: 19px;
+          letter-spacing: 0;
+          color: #ffffff;
+          font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 16px;
+        }
+
+        .reportsAnalytics {
+          margin: 16px 0px 0px 4px;
+          line-height: 19px;
+          letter-spacing: 0;
+          color: #ffffff;
+          font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 16px;
+        }
+
+        .maskGroup4 {
+          margin-top: 11px;
+          margin-left: 4px;
+          width: 59px;
+          height: 24px;
+        }
+
+        .group2 {
+          display: flex;
+          align-items: flex-start;
+          align-self: stretch;
+          margin: 306px 159px 0px 4px;
+          padding: 2px 8px 4px 7px;
+          background-image: url(../image/moubd49y-p2w0shz.svg);
+          background-position: center;
+          background-size: cover;
+          background-repeat: no-repeat;
+
+          .logout {
+            line-height: 19px;
+            letter-spacing: 0;
+            color: #ffffff;
+            font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 16px;
+          }
+        }
+      }
+
+      .vector4 {
+        display: flex;
+        position: absolute;
+        top: 107px;
+        left: -4px;
+        align-items: flex-start;
+        box-shadow: 0px 0px 0px 0px #00000014;
+        background: #000000;
+        padding-right: 21px;
+        width: 250px;
+        height: 48px;
+
+        .vector3 {
+          box-shadow: 0px 0px 0px 0px #00000014;
+          background: #ffffff;
+          width: 4px;
+          height: 48px;
+        }
+
+        .manageNews {
+          margin: 14px 0px 0px 20px;
+          line-height: 19px;
+          letter-spacing: 0;
+          color: #ffffff;
+          font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 16px;
+        }
+
+        .frame2 {
+          margin-top: 11px;
+          margin-left: 76px;
+          width: 27px;
+          height: 27px;
+          overflow: hidden;
+        }
+      }
+    }
+
+    .vector7 {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-top: 47px;
+      border-radius: 8px;
+      box-shadow: 0px 0px 0px 0px #00000014;
+      background: #f3f4f6;
+      padding: 19px 16px 316px;
+
+      .headline {
+        line-height: 21px;
+        letter-spacing: 0;
+        color: #000000;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .breakingNewsMajorEve {
+        margin: 6px 0px 0px;
+        line-height: 19px;
+        letter-spacing: 0;
+        color: #000000;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 16px;
+      }
+
+      .summary {
+        margin: 22px 0px 0px;
+        line-height: 21px;
+        letter-spacing: 0;
+        color: #000000;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .group3 {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        align-self: stretch;
+        margin-top: 6px;
+
+        .thisSectionContainsT {
+          line-height: 19px;
+          letter-spacing: 0;
+          color: #000000;
+          font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 16px;
+        }
+
+        .descriptionOfTheEven {
+          margin: 5px 0px 0px;
+          line-height: 19px;
+          letter-spacing: 0;
+          color: #000000;
+          font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 16px;
+        }
+      }
+
+      .maskGroup5 {
+        margin-top: 13px;
+        width: 116px;
+        height: 19px;
+      }
+
+      .category {
+        margin: 16px 0px 0px;
+        line-height: 21px;
+        letter-spacing: 0;
+        color: #000000;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .politics {
+        margin: 10px 0px 0px;
+        line-height: 19px;
+        letter-spacing: 0;
+        color: #000000;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 16px;
+      }
+
+      .language {
+        margin: 18px 0px 0px;
+        line-height: 21px;
+        letter-spacing: 0;
+        color: #000000;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .autoWrapper5 {
+        display: flex;
+        align-items: center;
+        align-self: stretch;
+        justify-content: space-between;
+        margin-top: 36px;
+        padding-right: 249px;
+        padding-left: 0;
+
+        .vector5 {
+          display: flex;
+          align-items: flex-start;
+          border-radius: 20px;
+          box-shadow: 0px 0px 0px 0px #00000014;
+          background: #dc143c;
+          padding: 10px 16px 12px 17px;
+
+          .editNews {
+            line-height: 19px;
+            letter-spacing: 0;
+            color: #ffffff;
+            font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+          }
+        }
+
+        .vector6 {
+          display: flex;
+          align-items: center;
+          border-radius: 20px;
+          box-shadow: 0px 0px 0px 0px #00000014;
+          background: #e5e7eb;
+          padding: 10px 16px;
+
+          .backToAllNews {
+            line-height: 20px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 16px;
+          }
+        }
+      }
+    }
+  }
+
+  .vector10 {
+    display: flex;
+    position: absolute;
+    top: 48px;
+    left: 276px;
+    flex-direction: column;
+    align-items: flex-start;
+    border-radius: 8px;
+    box-shadow: 0px 1px 3px 0px #0000001a;
+    background: #ffffff;
+    padding: 16px 16px 1351px;
+    width: 562px;
+    height: 1736px;
+
+    .group4 {
+      display: flex;
+      align-items: center;
+      align-self: stretch;
+      box-shadow: 0px 0px 0px 0px #00000014;
+
+      .vector9 {
+        border-radius: 8px;
+        width: 530px;
+        height: 200px;
+      }
+    }
+
+    .breakingNewsMajorEve2 {
+      margin: 17px 0px 0px;
+      line-height: 23px;
+      letter-spacing: 0;
+      color: #000000;
+      font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .group5 {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      align-self: stretch;
+      margin-top: 13px;
+      margin-right: 9px;
+
+      .thisIsAShortSummaryO {
+        line-height: 16px;
+        letter-spacing: 0;
+        color: #6b7280;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 14px;
+      }
+
+      .eventHappeningInTheC {
+        margin: 4px 0px 0px;
+        line-height: 16px;
+        letter-spacing: 0;
+        color: #6b7280;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 14px;
+      }
+    }
+
+    .autoWrapper6 {
+      display: flex;
+      align-items: center;
+      align-self: stretch;
+      justify-content: space-between;
+      margin-top: 20px;
+      padding-right: 0;
+      padding-left: 496px;
+
+      .frame3 {
+        width: 12px;
+        height: 12px;
+        overflow: hidden;
+      }
+
+      .frame4 {
+        width: 14px;
+        height: 14px;
+        overflow: hidden;
+      }
+    }
+
+    .tapToOpenFullArticle {
+      margin: 10px 0px 0px;
+      line-height: 16px;
+      letter-spacing: 0;
+      color: #6b7280;
+      font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 14px;
+    }
+  }
+}

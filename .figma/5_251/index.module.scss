@@ -1,0 +1,319 @@
+* {
+  box-sizing: border-box;
+}
+
+.vector14 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: #ffffff;
+  width: 375px;
+  height: 667px;
+  overflow: hidden;
+
+  .frame4 {
+    width: 12px;
+    height: 12px;
+    overflow: hidden;
+  }
+
+  .categoryPreferences {
+    margin: 0px 0px 0px 16px;
+    line-height: 20px;
+    letter-spacing: 0;
+    color: #000000;
+    font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+    font-size: 16px;
+  }
+
+  .frame2 {
+    width: 16px;
+    height: 16px;
+    overflow: hidden;
+  }
+
+  .frame {
+    width: 14px;
+    height: 14px;
+    overflow: hidden;
+  }
+
+  .vector2 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    align-self: stretch;
+    box-shadow: 0px 0px 0px 0px #00000014;
+    background: #ffffff;
+    padding-top: 19px;
+
+    .autoWrapper {
+      display: flex;
+      align-items: center;
+      align-self: stretch;
+      justify-content: space-between;
+      padding-right: 150px;
+      padding-left: 24px;
+
+      .settings {
+        line-height: 23px;
+        letter-spacing: 0;
+        color: #000000;
+        font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+      }
+    }
+
+    .vector {
+      margin-top: 19px;
+      box-shadow: 0px 0px 0px 0px #00000014;
+      background: #e5e7eb;
+      width: 375px;
+      height: 1px;
+    }
+  }
+
+  .autoWrapper2 {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    margin-top: 16px;
+    padding-right: 24px;
+    padding-left: 26px;
+
+    .hIn {
+      line-height: 20px;
+      letter-spacing: 0;
+      color: #000000;
+      font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 16px;
+    }
+
+    .language {
+      margin: 0px 0px 0px 18px;
+      line-height: 20px;
+      letter-spacing: 0;
+      color: #000000;
+      font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 16px;
+    }
+
+    .vector3 {
+      display: flex;
+      align-items: center;
+      margin-left: 35px;
+      border-radius: 16px;
+      box-shadow: 0px 0px 0px 0px #00000014;
+      background: #dc143c;
+      padding: 6px 12px;
+
+      .eN {
+        line-height: 20px;
+        letter-spacing: 0;
+        color: #ffffff;
+        font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 16px;
+      }
+    }
+
+    .vector4 {
+      display: flex;
+      align-items: center;
+      margin-left: 8px;
+      border-radius: 16px;
+      box-shadow: 0px 0px 0px 0px #00000014;
+      background: #e5e7eb;
+      padding: 6px 12px;
+    }
+
+    .vector5 {
+      display: flex;
+      align-items: center;
+      margin-left: 7px;
+      border-radius: 16px;
+      box-shadow: 0px 0px 0px 0px #00000014;
+      background: #e5e7eb;
+      padding: 6px 12px 6px 13px;
+    }
+  }
+
+  .vector6 {
+    margin-top: 16px;
+    box-shadow: 0px 0px 0px 0px #00000014;
+    background: #e5e7eb;
+    width: 375px;
+    height: 1px;
+  }
+
+  .autoWrapper3 {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    margin-top: 18px;
+    padding-right: 24px;
+    padding-left: 24px;
+
+    .frame3 {
+      margin-left: 116px;
+      width: 10px;
+      height: 10px;
+      overflow: hidden;
+    }
+  }
+
+  .vector7 {
+    margin-top: 18px;
+    box-shadow: 0px 0px 0px 0px #00000014;
+    background: #e5e7eb;
+    width: 375px;
+    height: 1px;
+  }
+
+  .autoWrapper4 {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    margin-top: 17px;
+    padding-right: 25px;
+    padding-left: 24px;
+
+    .group {
+      display: flex;
+      align-items: center;
+      margin-left: 149px;
+
+      .vector9 {
+        display: flex;
+        flex-grow: 1;
+        align-items: center;
+        border-radius: 12px;
+        box-shadow: 0px 0px 0px 0px #00000014;
+        background: #e5e7eb;
+        padding: 4px 27px 4px 4px;
+
+        .vector8 {
+          border-radius: 8px;
+          background: #dc143c;
+          width: 17px;
+          height: 16px;
+        }
+      }
+    }
+  }
+
+  .vector10 {
+    margin-top: 17px;
+    box-shadow: 0px 0px 0px 0px #00000014;
+    background: #e5e7eb;
+    width: 375px;
+    height: 1px;
+  }
+
+  .autoWrapper5 {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    margin-top: 18px;
+    padding-right: 24px;
+    padding-left: 24px;
+
+    .frame5 {
+      margin-left: 180px;
+      width: 10px;
+      height: 10px;
+      overflow: hidden;
+    }
+  }
+
+  .autoWrapper6 {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    margin-top: 18px;
+    padding-right: 24px;
+    padding-left: 24px;
+
+    .frame6 {
+      margin-left: 139px;
+      width: 10px;
+      height: 10px;
+      overflow: hidden;
+    }
+  }
+
+  .autoWrapper7 {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    margin-top: 18px;
+    padding-right: 24px;
+    padding-left: 24px;
+
+    .frame7 {
+      margin-left: 214px;
+      width: 10px;
+      height: 10px;
+      overflow: hidden;
+    }
+  }
+
+  .vector11 {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    margin: 146px 24px 0px;
+    border-radius: 24px;
+    box-shadow: 0px 0px 0px 0px #00000014;
+    background: #dc143c;
+    padding: 14px 134px 14px 135px;
+
+    .logout {
+      line-height: 20px;
+      letter-spacing: 0;
+      color: #ffffff;
+      font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+    }
+  }
+
+  .vector13 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-self: stretch;
+    margin-top: 20px;
+    background: #ffffff;
+    padding-bottom: 21px;
+    overflow: hidden;
+
+    .vector12 {
+      background: #d3d3d3;
+      width: 375px;
+      height: 1px;
+    }
+
+    .autoWrapper8 {
+      display: flex;
+      align-items: center;
+      align-self: stretch;
+      justify-content: space-between;
+      margin-top: 19px;
+      padding-right: 77px;
+      padding-left: 0;
+
+      .frame8 {
+        width: 18px;
+        height: 18px;
+        overflow: hidden;
+      }
+
+      .frame9 {
+        width: 21px;
+        height: 21px;
+        overflow: hidden;
+      }
+    }
+  }
+}

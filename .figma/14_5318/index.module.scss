@@ -1,0 +1,1218 @@
+* {
+  box-sizing: border-box;
+}
+
+.vector34 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  background: #ffffff;
+  padding-top: 1px;
+  padding-left: 1px;
+  width: 1440px;
+  height: 1633px;
+  overflow: hidden;
+
+  .autoWrapper5 {
+    position: relative;
+    width: 250px;
+    height: 1632px;
+
+    .logout {
+      line-height: 19px;
+      letter-spacing: 0;
+      color: #ffffff;
+      font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+      font-size: 16px;
+    }
+
+    .group {
+      display: flex;
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      align-items: flex-start;
+      padding: 2px 8px 4px 7px;
+      width: 65px;
+      height: 24px;
+      background-image: url(../image/mouc8mmm-oqlranx.svg);
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+    }
+
+    .vector4 {
+      display: flex;
+      position: absolute;
+      top: 0;
+      left: 0;
+      flex-direction: column;
+      align-items: flex-start;
+      box-shadow: 0px 0px 0px 0px #00000014;
+      background: #dc143c;
+      padding-top: 11px;
+      padding-bottom: 20px;
+      width: 250px;
+      height: 1632px;
+
+      .frame {
+        width: 27px;
+        height: 27px;
+        overflow: hidden;
+      }
+
+      .manageNews {
+        margin: 3px 0px 0px;
+        line-height: 19px;
+        letter-spacing: 0;
+        color: #ffffff;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 16px;
+      }
+
+      .group2 {
+        display: flex;
+        align-items: center;
+        align-self: stretch;
+        margin-right: 87px;
+        margin-left: 19px;
+        box-shadow: 0px 0px 0px 0px #00000014;
+
+        .vector {
+          border-radius: 8px;
+          width: 144px;
+          height: 37px;
+        }
+      }
+
+      .dashboardOverview {
+        margin: 25px 0px 0px 23px;
+        line-height: 19px;
+        letter-spacing: 0;
+        color: #ffffff;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .autoWrapper {
+        display: flex;
+        align-items: flex-start;
+        align-self: stretch;
+        justify-content: space-between;
+        margin-top: 27px;
+        padding-right: 22px;
+        padding-left: 23px;
+      }
+
+      .maskGroup {
+        margin-top: 13px;
+        margin-left: 31px;
+        width: 216px;
+        height: 23px;
+      }
+
+      .maskGroup2 {
+        margin-top: 4px;
+        margin-left: 31px;
+        width: 216px;
+        height: 23px;
+      }
+
+      .categories {
+        margin: 6px 0px 0px 31px;
+        line-height: 19px;
+        letter-spacing: 0;
+        color: #ffffff;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 16px;
+      }
+
+      .tagsManagement {
+        margin: 9px 0px 0px 31px;
+        line-height: 19px;
+        letter-spacing: 0;
+        color: #ffffff;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 16px;
+      }
+
+      .autoWrapper2 {
+        display: flex;
+        align-items: flex-start;
+        align-self: stretch;
+        justify-content: space-between;
+        margin-top: 24px;
+        padding-right: 22px;
+        padding-left: 23px;
+      }
+
+      .addReel {
+        margin: 16px 0px 0px 31px;
+        line-height: 19px;
+        letter-spacing: 0;
+        color: #ffffff;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 16px;
+      }
+
+      .allReelsList {
+        margin: 8px 0px 0px 31px;
+        line-height: 19px;
+        letter-spacing: 0;
+        color: #ffffff;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 16px;
+      }
+
+      .autoWrapper3 {
+        display: flex;
+        align-items: flex-start;
+        align-self: stretch;
+        justify-content: space-between;
+        margin-top: 14px;
+        padding-right: 22px;
+        padding-left: 23px;
+      }
+
+      .userList {
+        margin: 10px 0px 0px 31px;
+        line-height: 19px;
+        letter-spacing: 0;
+        color: #ffffff;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 16px;
+      }
+
+      .autoWrapper4 {
+        display: flex;
+        align-items: flex-start;
+        align-self: stretch;
+        justify-content: space-between;
+        margin-top: 16px;
+        padding-right: 20px;
+        padding-left: 23px;
+
+        .maskGroup3 {
+          margin-top: 5px;
+          width: 102px;
+          height: 23px;
+        }
+      }
+
+      .pushNotifications {
+        margin: 21px 0px 0px 31px;
+        line-height: 19px;
+        letter-spacing: 0;
+        color: #ffffff;
+        font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 16px;
+      }
+
+      .vector3 {
+        display: flex;
+        align-items: flex-start;
+        align-self: stretch;
+        justify-content: space-between;
+        margin-top: 17px;
+        box-shadow: 0px 0px 0px 0px #00000014;
+        background: #000000;
+        padding-right: 91px;
+        min-width: 250px;
+
+        .vector2 {
+          box-shadow: 0px 0px 0px 0px #00000014;
+          background: #ffffff;
+          width: 4px;
+          height: 48px;
+        }
+
+        .reportsAnalytics {
+          margin: 13px 0px 0px;
+          line-height: 19px;
+          letter-spacing: 0;
+          color: #ffffff;
+          font-family: Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 16px;
+        }
+      }
+
+      .maskGroup4 {
+        margin-top: 7px;
+        margin-left: 23px;
+        width: 59px;
+        height: 24px;
+      }
+
+      .group3 {
+        display: flex;
+        align-items: flex-start;
+        align-self: stretch;
+        margin: 914px 162px 0px 23px;
+        padding: 2px 8px 4px 7px;
+        background-image: url(../image/mouc8mmm-dnyt2zg.svg);
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+      }
+    }
+
+    .vector5 {
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      width: 100px;
+      height: 100px;
+    }
+  }
+
+  .autoWrapper35 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    align-self: stretch;
+    margin-top: 16px;
+
+    .autoWrapper6 {
+      display: flex;
+      align-items: flex-start;
+      align-self: stretch;
+      justify-content: space-between;
+      padding-right: 16px;
+      padding-left: 42px;
+
+      .analyticsReports {
+        margin: 5px 0px 0px;
+        line-height: 30px;
+        letter-spacing: 0;
+        color: #000000;
+        font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .group4 {
+        display: flex;
+        align-items: center;
+
+        .vector6 {
+          display: flex;
+          flex-grow: 1;
+          align-items: center;
+          justify-content: space-between;
+          border-radius: 8px;
+          box-shadow: 0px 0px 0px 0px #00000014;
+          background: #ffffff;
+          padding: 10px 8px;
+          width: 112px;
+          min-width: 112px;
+          height: 37px;
+
+          .today {
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #94a3b8;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+          }
+
+          .frame2 {
+            width: 14px;
+            height: 14px;
+            overflow: hidden;
+          }
+        }
+      }
+    }
+
+    .vector33 {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      align-self: stretch;
+      margin-top: 17px;
+      box-shadow: 0px 0px 0px 0px #00000014;
+      background: #f8f8f8;
+      padding: 24px 21px 25px 22px;
+
+      .breakingNews {
+        line-height: 18px;
+        letter-spacing: 0;
+        color: #000000;
+        font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 14px;
+      }
+
+      .title {
+        line-height: 18px;
+        letter-spacing: 0;
+        color: #000000;
+        font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .userGrowth {
+        line-height: 23px;
+        letter-spacing: 0;
+        color: #000000;
+        font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .vector12 {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        box-shadow: 0px 4px 6px 0px #0000001a;
+        background: #ffffff;
+        padding: 19px 157px 16px 14px;
+
+        .vector11 {
+          margin-top: 11px;
+          width: 364px;
+          height: 250px;
+        }
+      }
+
+      .autoWrapper11 {
+        display: flex;
+        align-items: center;
+        align-self: stretch;
+        justify-content: space-between;
+        padding-right: 2px;
+        padding-left: 0;
+
+        .a1234 {
+          margin: 2px 0px 0px;
+          line-height: 20px;
+          letter-spacing: 0;
+          color: #000000;
+          font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 16px;
+        }
+
+        .frame3 {
+          margin-top: 13px;
+          width: 27px;
+          height: 27px;
+          overflow: hidden;
+        }
+
+        .vector7 {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          box-shadow: 0px 4px 6px 0px #0000001a;
+          background: #ffffff;
+          padding: 16px 110px 18px 14px;
+          width: 260px;
+          min-width: 260px;
+
+          .autoWrapper7 {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            align-self: stretch;
+
+            .maskGroup5 {
+              width: 94px;
+              height: 28px;
+            }
+          }
+        }
+
+        .vector8 {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          box-shadow: 0px 4px 6px 0px #0000001a;
+          background: #ffffff;
+          padding: 16px 54px 18px 14px;
+          width: 260px;
+          min-width: 260px;
+
+          .autoWrapper8 {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            align-self: stretch;
+
+            .maskGroup6 {
+              width: 150px;
+              height: 28px;
+            }
+          }
+        }
+
+        .vector9 {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          box-shadow: 0px 4px 6px 0px #0000001a;
+          background: #ffffff;
+          padding: 16px 19px 18px 14px;
+          width: 260px;
+          min-width: 260px;
+
+          .frame4 {
+            margin-top: 18px;
+            width: 16px;
+            height: 16px;
+            overflow: hidden;
+          }
+
+          .autoWrapper9 {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            align-self: stretch;
+
+            .maskGroup7 {
+              width: 196px;
+              height: 28px;
+            }
+          }
+        }
+
+        .vector10 {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          box-shadow: 0px 4px 6px 0px #0000001a;
+          background: #ffffff;
+          padding: 16px 27px 18px 15px;
+          width: 260px;
+          min-width: 260px;
+
+          .frame5 {
+            margin-top: 14px;
+            width: 24px;
+            height: 24px;
+            overflow: hidden;
+          }
+
+          .autoWrapper10 {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            align-self: stretch;
+
+            .maskGroup8 {
+              width: 178px;
+              height: 28px;
+            }
+          }
+        }
+      }
+
+      .autoWrapper12 {
+        display: flex;
+        align-items: center;
+        align-self: stretch;
+        justify-content: space-between;
+        margin-top: 32px;
+        padding-right: 1px;
+        padding-left: 0;
+      }
+
+      .autoWrapper13 {
+        display: flex;
+        align-items: center;
+        align-self: stretch;
+        justify-content: space-between;
+        margin-top: 16px;
+        padding-right: 1px;
+        padding-left: 0;
+      }
+
+      .vector21 {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        align-self: stretch;
+        margin-top: 32px;
+        box-shadow: 0px 4px 6px 0px #0000001a;
+        background: #ffffff;
+        padding: 19px 16px 16px 14px;
+
+        .a450 {
+          margin: 0px 0px 0px 175px;
+          line-height: 18px;
+          letter-spacing: 0;
+          color: #000000;
+          font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 14px;
+        }
+
+        .group12 {
+          display: flex;
+          align-items: center;
+          margin-left: 200px;
+          box-shadow: 0px 0px 0px 0px #00000014;
+          background: #e5e7eb;
+
+          .vector20 {
+            box-shadow: 0px 0px 0px 0px #00000014;
+            background: #e5e7eb;
+            width: 231px;
+            height: 1px;
+          }
+        }
+
+        .group9 {
+          display: flex;
+          align-items: center;
+          box-shadow: 0px 0px 0px 0px #00000014;
+          background: #e5e7eb;
+
+          .vector17 {
+            box-shadow: 0px 0px 0px 0px #00000014;
+            background: #e5e7eb;
+            width: 412px;
+            height: 1px;
+          }
+        }
+
+        .autoWrapper18 {
+          position: relative;
+          width: 213px;
+          height: 1px;
+
+          .group10 {
+            display: flex;
+            position: absolute;
+            top: 0;
+            left: 0;
+            align-items: center;
+            box-shadow: 0px 0px 0px 0px #00000014;
+            background: #e5e7eb;
+            width: 213px;
+            height: 1px;
+
+            .vector18 {
+              box-shadow: 0px 0px 0px 0px #00000014;
+              background: #e5e7eb;
+              width: 213px;
+              height: 1px;
+            }
+          }
+
+          .group11 {
+            display: flex;
+            position: absolute;
+            top: 0;
+            right: -200px;
+            align-items: center;
+            box-shadow: 0px 0px 0px 0px #00000014;
+            background: #e5e7eb;
+            width: 201px;
+            height: 1px;
+
+            .vector19 {
+              box-shadow: 0px 0px 0px 0px #00000014;
+              background: #e5e7eb;
+              width: 201px;
+              height: 1px;
+            }
+          }
+        }
+
+        .autoWrapper14 {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          margin-top: 20px;
+          padding-right: 182px;
+          padding-left: 0;
+
+          .views {
+            margin: 0px 0px 0px 380px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+          }
+
+          .likes {
+            margin: 0px 0px 0px 170px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+          }
+
+          .shares {
+            margin: 0px 0px 0px 164px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+          }
+        }
+
+        .autoWrapper16 {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          margin-top: 24px;
+          padding-right: 0;
+          padding-left: 0;
+
+          .group5 {
+            display: flex;
+            align-items: center;
+            box-shadow: 0px 0px 0px 0px #00000014;
+            background: #d1d5db;
+
+            .vector13 {
+              box-shadow: 0px 0px 0px 0px #00000014;
+              background: #d1d5db;
+              width: 412px;
+              height: 2px;
+            }
+          }
+
+          .autoWrapper15 {
+            position: relative;
+            width: 213px;
+            height: 2px;
+
+            .group6 {
+              display: flex;
+              position: absolute;
+              top: 0;
+              left: 0;
+              align-items: center;
+              box-shadow: 0px 0px 0px 0px #00000014;
+              background: #d1d5db;
+              width: 213px;
+              height: 2px;
+
+              .vector14 {
+                box-shadow: 0px 0px 0px 0px #00000014;
+                background: #d1d5db;
+                width: 213px;
+                height: 2px;
+              }
+            }
+
+            .group7 {
+              display: flex;
+              position: absolute;
+              top: 0;
+              right: -200px;
+              align-items: center;
+              box-shadow: 0px 0px 0px 0px #00000014;
+              background: #d1d5db;
+              width: 201px;
+              height: 2px;
+
+              .vector15 {
+                box-shadow: 0px 0px 0px 0px #00000014;
+                background: #d1d5db;
+                width: 201px;
+                height: 2px;
+              }
+            }
+          }
+
+          .group8 {
+            display: flex;
+            align-items: center;
+            margin-left: 200px;
+            box-shadow: 0px 0px 0px 0px #00000014;
+            background: #d1d5db;
+
+            .vector16 {
+              box-shadow: 0px 0px 0px 0px #00000014;
+              background: #d1d5db;
+              width: 231px;
+              height: 2px;
+            }
+          }
+        }
+
+        .autoWrapper17 {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          margin-top: 1px;
+          padding-right: 215px;
+          padding-left: 0;
+
+          .a12342 {
+            margin: 0px 0px 0px 309px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+          }
+
+          .a567 {
+            margin: 0px 0px 0px 177px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+          }
+        }
+
+        .autoWrapper19 {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          margin-top: 42px;
+          padding-right: 0;
+          padding-left: 0;
+        }
+
+        .autoWrapper20 {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          margin-top: 1px;
+          padding-right: 208px;
+          padding-left: 0;
+
+          .a1000 {
+            margin: 0px 0px 0px 296px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+          }
+        }
+
+        .autoWrapper21 {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          margin-top: 41px;
+          padding-right: 0;
+          padding-left: 0;
+        }
+
+        .autoWrapper22 {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          margin-top: 1px;
+          padding-right: 208px;
+          padding-left: 0;
+
+          .a950 {
+            margin: 0px 0px 0px 303px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+          }
+
+          .a400 {
+            margin: 0px 0px 0px 187px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+          }
+        }
+      }
+
+      .vector30 {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        align-self: stretch;
+        margin-top: 32px;
+        box-shadow: 0px 4px 6px 0px #0000001a;
+        background: #ffffff;
+        padding: 19px 16px 16px 14px;
+
+        .a2100 {
+          margin: 0px 0px 0px 169px;
+          line-height: 18px;
+          letter-spacing: 0;
+          color: #000000;
+          font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 14px;
+        }
+
+        .a12343 {
+          margin: 0px 0px 0px 158px;
+          line-height: 18px;
+          letter-spacing: 0;
+          color: #000000;
+          font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+          font-size: 14px;
+        }
+
+        .autoWrapper29 {
+          position: relative;
+          width: 294px;
+          height: 1px;
+
+          .group19 {
+            display: flex;
+            position: absolute;
+            top: 0;
+            left: -194px;
+            align-items: center;
+            box-shadow: 0px 0px 0px 0px #00000014;
+            background: #e5e7eb;
+            width: 195px;
+            height: 1px;
+
+            .vector28 {
+              box-shadow: 0px 0px 0px 0px #00000014;
+              background: #e5e7eb;
+              width: 195px;
+              height: 1px;
+            }
+          }
+
+          .group20 {
+            display: flex;
+            position: absolute;
+            top: 0;
+            left: 0;
+            align-items: center;
+            box-shadow: 0px 0px 0px 0px #00000014;
+            background: #e5e7eb;
+            width: 294px;
+            height: 1px;
+
+            .vector29 {
+              box-shadow: 0px 0px 0px 0px #00000014;
+              background: #e5e7eb;
+              width: 294px;
+              height: 1px;
+            }
+          }
+        }
+
+        .autoWrapper28 {
+          position: relative;
+          width: 363px;
+          height: 1px;
+
+          .group17 {
+            display: flex;
+            position: absolute;
+            top: 0;
+            left: 0;
+            align-items: center;
+            box-shadow: 0px 0px 0px 0px #00000014;
+            background: #e5e7eb;
+            width: 363px;
+            height: 1px;
+
+            .vector26 {
+              box-shadow: 0px 0px 0px 0px #00000014;
+              background: #e5e7eb;
+              width: 363px;
+              height: 1px;
+            }
+          }
+
+          .group18 {
+            display: flex;
+            position: absolute;
+            top: 0;
+            right: -205px;
+            align-items: center;
+            box-shadow: 0px 0px 0px 0px #00000014;
+            background: #e5e7eb;
+            width: 207px;
+            height: 1px;
+
+            .vector27 {
+              box-shadow: 0px 0px 0px 0px #00000014;
+              background: #e5e7eb;
+              width: 207px;
+              height: 1px;
+            }
+          }
+        }
+
+        .autoWrapper23 {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          margin-top: 20px;
+          padding-right: 218px;
+          padding-left: 0;
+
+          .views2 {
+            margin: 0px 0px 0px 329px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+          }
+
+          .likes2 {
+            margin: 0px 0px 0px 165px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+          }
+
+          .comments {
+            margin: 0px 0px 0px 157px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+          }
+        }
+
+        .autoWrapper26 {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          justify-content: space-between;
+          margin-top: 24px;
+          padding-right: 0;
+          padding-left: 0;
+
+          .autoWrapper24 {
+            position: relative;
+            width: 363px;
+            height: 2px;
+
+            .group13 {
+              display: flex;
+              position: absolute;
+              top: 0;
+              left: 0;
+              align-items: center;
+              box-shadow: 0px 0px 0px 0px #00000014;
+              background: #d1d5db;
+              width: 363px;
+              height: 2px;
+
+              .vector22 {
+                box-shadow: 0px 0px 0px 0px #00000014;
+                background: #d1d5db;
+                width: 363px;
+                height: 2px;
+              }
+            }
+
+            .group14 {
+              display: flex;
+              position: absolute;
+              top: 0;
+              right: -205px;
+              align-items: center;
+              box-shadow: 0px 0px 0px 0px #00000014;
+              background: #d1d5db;
+              width: 207px;
+              height: 2px;
+
+              .vector23 {
+                box-shadow: 0px 0px 0px 0px #00000014;
+                background: #d1d5db;
+                width: 207px;
+                height: 2px;
+              }
+            }
+          }
+
+          .autoWrapper25 {
+            position: relative;
+            width: 294px;
+            height: 2px;
+
+            .group15 {
+              display: flex;
+              position: absolute;
+              top: 0;
+              left: -194px;
+              align-items: center;
+              box-shadow: 0px 0px 0px 0px #00000014;
+              background: #d1d5db;
+              width: 195px;
+              height: 2px;
+
+              .vector24 {
+                box-shadow: 0px 0px 0px 0px #00000014;
+                background: #d1d5db;
+                width: 195px;
+                height: 2px;
+              }
+            }
+
+            .group16 {
+              display: flex;
+              position: absolute;
+              top: 0;
+              left: 0;
+              align-items: center;
+              box-shadow: 0px 0px 0px 0px #00000014;
+              background: #d1d5db;
+              width: 294px;
+              height: 2px;
+
+              .vector25 {
+                box-shadow: 0px 0px 0px 0px #00000014;
+                background: #d1d5db;
+                width: 294px;
+                height: 2px;
+              }
+            }
+          }
+        }
+
+        .autoWrapper27 {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          margin-top: 1px;
+          padding-right: 259px;
+          padding-left: 0;
+
+          .a5678 {
+            margin: 0px 0px 0px 282px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+          }
+
+          .a2345 {
+            margin: 0px 0px 0px 172px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+          }
+        }
+
+        .autoWrapper30 {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          justify-content: space-between;
+          margin-top: 42px;
+          padding-right: 0;
+          padding-left: 0;
+        }
+
+        .autoWrapper31 {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          margin-top: 1px;
+          padding-right: 257px;
+          padding-left: 0;
+
+          .a4500 {
+            margin: 0px 0px 0px 286px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+          }
+        }
+
+        .autoWrapper32 {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          justify-content: space-between;
+          margin-top: 41px;
+          padding-right: 0;
+          padding-left: 0;
+        }
+
+        .autoWrapper33 {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+          margin-top: 1px;
+          padding-right: 269px;
+          padding-left: 0;
+
+          .a4000 {
+            margin: 0px 0px 0px 259px;
+            line-height: 18px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+          }
+        }
+      }
+
+      .autoWrapper34 {
+        display: flex;
+        align-items: center;
+        align-self: stretch;
+        justify-content: space-between;
+        margin-top: 32px;
+        padding-right: 2px;
+        padding-left: 800px;
+
+        .vector31 {
+          display: flex;
+          align-items: center;
+          border-radius: 20px;
+          box-shadow: 0px 0px 0px 0px #00000014;
+          background: #dc143c;
+          padding: 10px 9px 10px 10px;
+
+          .exportAsPdf {
+            line-height: 20px;
+            letter-spacing: 0;
+            color: #ffffff;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+          }
+        }
+
+        .vector32 {
+          display: flex;
+          align-items: center;
+          border-radius: 20px;
+          box-shadow: 0px 0px 0px 0px #00000014;
+          background: #e5e7eb;
+          padding: 10px 9px 10px 10px;
+
+          .exportAsCsv {
+            line-height: 20px;
+            letter-spacing: 0;
+            color: #000000;
+            font-family: "Lexend Deca", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+          }
+        }
+      }
+    }
+  }
+}
