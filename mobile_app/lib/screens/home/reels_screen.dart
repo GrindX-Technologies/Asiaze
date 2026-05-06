@@ -112,26 +112,39 @@ class _ReelsScreenState extends State<ReelsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFFDC143C)))
           : _reelsData.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.video_library_outlined, size: 64, color: Colors.grey.shade600),
-                      const SizedBox(height: 16),
-                      Text(
-                        _tNoReels,
-                        style: GoogleFonts.lexendDeca(
-                          fontSize: 16,
-                          color: Colors.grey.shade400,
-                        ),
+              ? SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.video_library_outlined, size: 64, color: Colors.grey.shade600),
+                          const SizedBox(height: 16),
+                          Text(
+                            _tNoReels,
+                            style: GoogleFonts.lexendDeca(
+                              fontSize: 16,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 )
               : RefreshIndicator(
                   color: const Color(0xFFDC143C),
                   backgroundColor: Colors.white,
-                  onRefresh: _fetchReels,
+                    onRefresh: () async {
+                      await _fetchReels();
+                      _pageController.animateToPage(
+                        0,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    },
                   child: PageView.builder(
                     controller: _pageController,
                     scrollDirection: Axis.vertical,

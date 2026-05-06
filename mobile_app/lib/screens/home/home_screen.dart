@@ -217,8 +217,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: const Color(0xFFDC143C),
                     backgroundColor: Colors.white,
                     onRefresh: () async {
-                      // Simulate network request for refreshing feed
-                      await Future.delayed(const Duration(seconds: 1));
+                      // Actually fetch new data on swipe down
+                      await _fetchFeed();
                       _pageController.animateToPage(
                         0,
                         duration: const Duration(milliseconds: 300),
@@ -228,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _buildFeed(),
                   ),
                   // "Load New Feed" Pill (Simulated as positioned overlay like in second image)
-                  Positioned(
+                  if (_feedData.isNotEmpty) Positioned(
                     top: 16,
                     left: 0,
                     right: 0,
@@ -236,6 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: GestureDetector(
                         onTap: () {
                           // Refresh logic
+                          _fetchFeed();
                           _pageController.animateToPage(
                             0,
                             duration: const Duration(milliseconds: 300),
@@ -292,20 +293,26 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (_feedData.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.feed_outlined, size: 64, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            Text(
-              _tNoArticles,
-              style: GoogleFonts.lexendDeca(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
+      return SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.7, // Take up most of the screen
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.feed_outlined, size: 64, color: Colors.grey.shade400),
+                const SizedBox(height: 16),
+                Text(
+                  _tNoArticles,
+                  style: GoogleFonts.lexendDeca(
+                    fontSize: 16,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       );
     }
@@ -503,10 +510,6 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline, size: 28),
             label: 'Profile',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.grid_view_rounded, size: 28),
-            label: 'Menu',
           ),
         ],
       ),

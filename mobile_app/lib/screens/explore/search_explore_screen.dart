@@ -155,6 +155,7 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
                         setState(() {
                           _activeTab = tab;
                         });
+                        _fetchData();
                       },
                       child: Container(
                         padding: const EdgeInsets.only(right: 20),
@@ -192,12 +193,25 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
       body: _isLoading 
           ? const Center(child: CircularProgressIndicator(color: Color(0xFFDC143C)))
           : _exploreData.isEmpty 
-              ? Center(
-                  child: Text(
-                    _tNoResults,
-                    style: GoogleFonts.roboto(
-                      fontSize: 16,
-                      color: const Color(0xFF979797),
+              ? SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.7,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.feed_outlined, size: 64, color: Colors.grey.shade400),
+                          const SizedBox(height: 16),
+                          Text(
+                            _tNoResults,
+                            style: GoogleFonts.roboto(
+                              fontSize: 16,
+                              color: const Color(0xFF979797),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 )
