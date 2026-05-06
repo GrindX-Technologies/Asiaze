@@ -105,8 +105,8 @@ export function Sidebar() {
                 <button
                   onClick={() => toggleMenu(item.title, item.href)}
                   className={cn(
-                    "group flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium hover:bg-black/20 transition-colors",
-                    isActive ? "bg-black/20 text-white" : "text-white"
+                    "group flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium hover:bg-black hover:text-white transition-colors",
+                    isActive ? "bg-black text-white" : "text-white"
                   )}
                 >
                   <span>{item.title}</span>
@@ -116,7 +116,7 @@ export function Sidebar() {
                 <Link
                   href={item.href}
                   className={cn(
-                    "group flex w-full items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-black/20 transition-colors",
+                    "group flex w-full items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-black hover:text-white transition-colors",
                     pathname === item.href ? "bg-black text-white" : "text-white"
                   )}
                 >
@@ -133,8 +133,8 @@ export function Sidebar() {
                       className={cn(
                         "group flex w-full items-center rounded-md pl-8 pr-3 py-2 text-sm font-medium transition-colors",
                         pathname === subItem.href 
-                          ? "bg-black/10 text-white" 
-                          : "text-white/80 hover:bg-black/10 hover:text-white"
+                          ? "bg-black text-white" 
+                          : "text-white/80 hover:bg-black hover:text-white"
                       )}
                     >
                       {subItem.title}
