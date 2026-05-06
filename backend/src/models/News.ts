@@ -9,6 +9,7 @@ export interface INews extends Document {
   sourceUrl?: string;
   language?: string;
   source?: string;
+  states?: string[];
   author: mongoose.Types.ObjectId;
   category: mongoose.Types.ObjectId;
   tags: mongoose.Types.ObjectId[];
@@ -32,6 +33,7 @@ const newsSchema = new Schema(
     sourceUrl: { type: String },
     language: { type: String, default: 'en' },
     source: { type: String },
+    states: [{ type: String }],
     author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
     tags: [{ type: Schema.Types.ObjectId, ref: 'Tag' }],

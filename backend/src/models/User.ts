@@ -8,6 +8,7 @@ export interface IUser extends Document {
   role: 'admin' | 'user';
   avatar?: string;
   phone?: string;
+  state?: string;
   referralId: string;
   referredBy?: mongoose.Types.ObjectId;
   points: number;
@@ -31,6 +32,7 @@ const userSchema = new Schema(
     role: { type: String, enum: ['admin', 'user'], default: 'user' },
     avatar: { type: String },
     phone: { type: String },
+    state: { type: String },
     referralId: { type: String, unique: true, required: true },
     referredBy: { type: Schema.Types.ObjectId, ref: 'User' },
     points: { type: Number, default: 0 },

@@ -17,6 +17,14 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _obscurePassword = true;
   bool _isMobileMode = false;
   bool _isLoading = false;
+  String? _selectedState;
+
+  final List<String> _indianStates = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", 
+    "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", 
+    "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", 
+    "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Delhi", "Jammu and Kashmir"
+  ];
 
   @override
   void initState() {
@@ -48,9 +56,9 @@ class _SignupScreenState extends State<SignupScreen> {
     final email = _emailPhoneController.text.trim();
     final password = _passwordController.text;
 
-    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+    if (name.isEmpty || email.isEmpty || password.isEmpty || _selectedState == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
+        const SnackBar(content: Text('Please fill all fields and select a state')),
       );
       return;
     }
@@ -60,7 +68,7 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      await ApiService.register(name, email, password, "");
+      await ApiService.register(name, email, password, _selectedState!);
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
@@ -122,6 +130,46 @@ class _SignupScreenState extends State<SignupScreen> {
                     borderSide: const BorderSide(color: Color(0xFFDC143C)),
                   ),
                 ),
+              ),
+              const SizedBox(height: 16),
+              // State Dropdown
+              DropdownButtonFormField<String>(
+                value: _selectedState,
+                hint: Text(
+                  'Select your State',
+                  style: GoogleFonts.lexendDeca(
+                    color: const Color(0xFF94A3B8),
+                    fontSize: 14,
+                  ),
+                ),
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFDC143C)),
+                  ),
+                ),
+                items: _indianStates.map((String state) {
+                  return DropdownMenuItem<String>(
+                    value: state,
+                    child: Text(
+                      state,
+                      style: GoogleFonts.lexendDeca(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedState = newValue;
+                  });
+                },
               ),
               const SizedBox(height: 16),
               // Email / Phone Field

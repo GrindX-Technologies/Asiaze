@@ -37,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<dynamic> _feedData = [];
   String _langCode = 'EN';
+  String? _userState;
   
   // Translated UI Strings
   String _tBreakingNews = 'Breaking News: Major updates from around the world...';
@@ -44,6 +45,10 @@ class _HomeScreenState extends State<HomeScreen> {
   String _tNoArticles = 'No articles available right now';
   String _tAllCaughtUp = 'You\'re all caught up!';
   String _tCheckBackLater = 'Check back later for more news.';
+  
+  String _tLocal = 'Local';
+  String _tStories = 'Stories';
+  String _tVideos = 'Videos';
 
   @override
   void initState() {
@@ -55,8 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _langCode = prefs.getString('selectedLanguage') ?? 'EN';
+      _userState = prefs.getString('userState');
     });
-    
+
     // Translate UI strings if needed
     if (_langCode != 'EN') {
       _tBreakingNews = await TranslationService.translateText('Breaking News: Major updates from around the world...', _langCode);
@@ -64,6 +70,9 @@ class _HomeScreenState extends State<HomeScreen> {
       _tNoArticles = await TranslationService.translateText('No articles available right now', _langCode);
       _tAllCaughtUp = await TranslationService.translateText('You\'re all caught up!', _langCode);
       _tCheckBackLater = await TranslationService.translateText('Check back later for more news.', _langCode);
+      _tLocal = await TranslationService.translateText('Local', _langCode);
+      _tStories = await TranslationService.translateText('Stories', _langCode);
+      _tVideos = await TranslationService.translateText('Videos', _langCode);
       
       // Translate tabs
       List<String> translatedTabs = [];
@@ -75,6 +84,11 @@ class _HomeScreenState extends State<HomeScreen> {
       _activeTab = _tabs[0];
     }
     
+    if (_userState != null && _userState!.isNotEmpty && !_tabs.contains(_tLocal)) {
+      _tabs.insert(0, _tLocal);
+      _activeTab = _tLocal;
+    }
+    
     await _fetchFeed();
   }
 
@@ -83,7 +97,13 @@ class _HomeScreenState extends State<HomeScreen> {
       _isLoading = true;
     });
     try {
-      final data = await ApiService.getNews();
+      // Find original tab name if translated
+      String apiQueryState = '';
+      if (_userState != null && _activeTab == _tLocal) {
+        apiQueryState = _userState!;
+      }
+
+      final data = await ApiService.getNews(state: apiQueryState.isNotEmpty ? apiQueryState : null);
       
       List<dynamic> mappedData = [];
       for (var item in data) {
@@ -373,17 +393,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   setState(() {
                     _activeTab = tab;
                   });
+                  _fetchFeed(); // Add this to reload feed based on tab
                   
-                  if (index == 2) { // Videos index is 2
+                  if (tab == _tVideos) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const ReelsScreen()),
                     ).then((_) {
                       setState(() {
-                        _activeTab = _tabs[0]; // Reset to My Feed
+                        _activeTab = _tabs[0]; // Reset to initial tab
                       });
+                      _fetchFeed();
                     });
-                  } else if (index == 1) { // Stories index is 1
+                  } else if (tab == _tStories) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const StoriesScreen()),
@@ -391,6 +413,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       setState(() {
                         _activeTab = _tabs[0];
                       });
+                      _fetchFeed();
                     });
                   }
                 },

@@ -29,21 +29,30 @@ class ApiService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       await setToken(data['token']);
+      if (data['state'] != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('userState', data['state']);
+      }
       return data;
     } else {
       throw Exception(jsonDecode(response.body)['message'] ?? 'Login failed');
     }
   }
 
-  static Future<Map<String, dynamic>> register(String name, String email, String password, String phone) async {
+  static Future<Map<String, dynamic>> register(String name, String email, String password, String state) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/register'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'name': name, 'email': email, 'password': password, 'phone': phone}),
+      body: jsonEncode({'name': name, 'email': email, 'password': password, 'state': state}),
     );
     if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
       await setToken(data['token']);
+      
+      // Save state to local preferences for Local News tab
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userState', state);
+      
       return data;
     } else {
       throw Exception(jsonDecode(response.body)['message'] ?? 'Registration failed');
@@ -60,10 +69,16 @@ class ApiService {
     await prefs.setString('language', lang);
   }
 
-  static Future<List<dynamic>> getNews() async {
+  static Future<List<dynamic>> getNews({String? state}) async {
     final token = await getToken();
+    
+    String url = '$baseUrl/news';
+    if (state != null && state.isNotEmpty) {
+      url += '?state=${Uri.encodeComponent(state)}';
+    }
+    
     final response = await http.get(
-      Uri.parse('$baseUrl/news'),
+      Uri.parse(url),
       headers: {
         'Content-Type': 'application/json',
         if (token != null) 'Authorization': 'Bearer $token'

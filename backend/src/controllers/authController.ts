@@ -30,6 +30,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         name: user.name,
         email: user.email,
         role: user.role,
+        state: user.state,
         avatar: user.avatar,
         token: generateToken(user._id as any),
       });
@@ -46,7 +47,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 // @access  Public
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, phone, referredByCode } = req.body;
+    const { name, email, password, phone, state, referredByCode } = req.body;
 
     const userExists = await User.findOne({ email });
 
@@ -75,6 +76,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       email,
       password,
       phone,
+      state,
       referralId,
       referredBy: referredByUserId,
       role: 'user', // default

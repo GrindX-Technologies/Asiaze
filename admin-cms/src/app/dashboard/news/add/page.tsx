@@ -11,6 +11,13 @@ import { Upload } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
+const INDIAN_STATES = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", 
+  "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", 
+  "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", 
+  "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Delhi", "Jammu and Kashmir"
+];
+
 export default function AddNewsPage() {
   const router = useRouter();
   
@@ -21,6 +28,7 @@ export default function AddNewsPage() {
   const [source, setSource] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [language, setLanguage] = useState("en");
+  const [states, setStates] = useState<string[]>([]);
   const [tagsInput, setTagsInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
@@ -104,6 +112,7 @@ export default function AddNewsPage() {
         sourceUrl,
         source,
         language,
+        states,
         category: categoryId,
         coverImage,
         status,
@@ -228,6 +237,30 @@ export default function AddNewsPage() {
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-black font-bold">Target States (Optional)</Label>
+              <div className="h-40 overflow-y-auto border border-gray-200 rounded-md p-3 bg-white space-y-2">
+                {INDIAN_STATES.map((state) => (
+                  <label key={state} className="flex items-center space-x-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-gray-300 text-[#DC143C] focus:ring-[#DC143C]"
+                      checked={states.includes(state)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setStates([...states, state]);
+                        } else {
+                          setStates(states.filter(s => s !== state));
+                        }
+                      }}
+                    />
+                    <span className="text-sm text-gray-700">{state}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500">Select states for local news distribution.</p>
             </div>
 
             <div className="space-y-2">

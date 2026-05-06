@@ -6,10 +6,11 @@ import News from '../models/News';
 // @access  Public
 export const getNews = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { status, category } = req.query;
+    const { status, category, state } = req.query;
     const query: any = {};
     if (status) query.status = status;
     if (category) query.category = category;
+    if (state) query.states = state;
 
     const news = await News.find(query).populate('category author tags').sort({ createdAt: -1 });
     res.json(news);
@@ -23,7 +24,7 @@ export const getNews = async (req: Request, res: Response): Promise<void> => {
 // @access  Private/Admin
 export const createNews = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { title, slug, content, summary, coverImage, sourceUrl, language, source, category, tags, status, isBreaking } = req.body;
+    const { title, slug, content, summary, coverImage, sourceUrl, language, source, states, category, tags, status, isBreaking } = req.body;
     
     const news = new News({
       title,
@@ -34,6 +35,7 @@ export const createNews = async (req: Request, res: Response): Promise<void> => 
       sourceUrl,
       language,
       source,
+      states,
       author: (req as any).user._id,
       category,
       tags,
