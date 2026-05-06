@@ -54,13 +54,25 @@ class ArticleDetailScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  height: 220,
-                  width: double.infinity,
-                  color: Colors.grey[300],
-                  // TODO: Replace with actual network image
-                  child: const Icon(Icons.image, size: 64, color: Colors.grey),
-                ),
+                child: article['coverImage'] != null && article['coverImage'].toString().isNotEmpty
+                    ? Image.network(
+                        'https://asiaze.cloud${article['coverImage']}',
+                        height: 220,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          height: 220,
+                          width: double.infinity,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.image, size: 64, color: Colors.grey),
+                        ),
+                      )
+                    : Container(
+                        height: 220,
+                        width: double.infinity,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.image, size: 64, color: Colors.grey),
+                      ),
               ),
             ),
 
@@ -120,9 +132,7 @@ class ArticleDetailScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
-                'In recent years, the renewable energy sector has seen unprecedented growth and innovation, driven by advancements in technology and increased awareness of environmental issues. Read\n\n'
-                'Numerous companies are investing heavily in solar, wind, and other renewable sources, aiming to reduce dependency on fossil fuels. The potential for job creation and economic growth is substantial, with experts predicting a significant shift in global energy dynamics.\n\n'
-                'As the world moves towards a greener future, the role of renewable energy becomes increasingly vital. Explore how governments are supporting this transition.',
+                article['content'] ?? 'No content available.',
                 style: GoogleFonts.roboto(
                   fontSize: 16,
                   fontWeight: FontWeight.w400,

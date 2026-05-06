@@ -38,13 +38,25 @@ class RegularNewsCard extends StatelessWidget {
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
               ),
-              child: Container(
-                height: 200,
-                width: double.infinity,
-                color: Colors.grey[300],
-                // TODO: Replace with actual network image
-                child: const Icon(Icons.image, size: 48, color: Colors.grey),
-              ),
+              child: article['coverImage'] != null && article['coverImage'].toString().isNotEmpty
+                  ? Image.network(
+                      'https://asiaze.cloud${article['coverImage']}',
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 200,
+                        width: double.infinity,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.image, size: 48, color: Colors.grey),
+                      ),
+                    )
+                  : Container(
+                      height: 200,
+                      width: double.infinity,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.image, size: 48, color: Colors.grey),
+                    ),
             ),
             // Red accent line
             Container(

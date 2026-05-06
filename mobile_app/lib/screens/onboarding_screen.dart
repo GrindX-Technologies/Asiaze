@@ -143,19 +143,26 @@ class OnboardingContent extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Image placeholder until Figma assets are exported
+          // App Logo for Onboarding
           Container(
             height: 250,
             width: 250,
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFF0F2), // Light red tint
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(20),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: const Center(
-              child: Icon(Icons.image, size: 80, color: Color(0xFFDC143C)),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/images/logo.png',
+                fit: BoxFit.cover,
+              ),
             ),
-            // TODO: Uncomment the line below when you place images in assets/images/
-            // child: Image.asset(image, height: 250, fit: BoxFit.contain),
           ),
           const SizedBox(height: 48),
           Text(
