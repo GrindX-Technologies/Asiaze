@@ -24,14 +24,14 @@ export const getStoryById = async (req: Request, res: Response) => {
 
 export const createStory = async (req: Request, res: Response) => {
   try {
-    const { title, category, imageUrl, description } = req.body;
+    const { title, category, pages, status } = req.body;
     const author = (req as any).user._id;
 
     const story = new Story({
       title,
       category,
-      imageUrl,
-      description,
+      pages,
+      status: status || 'published',
       author,
     });
 
@@ -44,11 +44,11 @@ export const createStory = async (req: Request, res: Response) => {
 
 export const updateStory = async (req: Request, res: Response) => {
   try {
-    const { title, category, imageUrl, description } = req.body;
+    const { title, category, pages, status } = req.body;
     
     const story = await Story.findByIdAndUpdate(
       req.params.id,
-      { title, category, imageUrl, description },
+      { title, category, pages, status },
       { new: true }
     );
 

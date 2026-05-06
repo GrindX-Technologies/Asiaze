@@ -106,4 +106,20 @@ class ApiService {
       throw Exception('Failed to load reels');
     }
   }
+
+  static Future<List<dynamic>> getStories() async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/stories'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token'
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load stories');
+    }
+  }
 }

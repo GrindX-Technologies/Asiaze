@@ -6,38 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Upload } from "lucide-react";
+import { Upload, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 
 export default function AddStoryPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [videoPreview, setVideoPreview] = useState<string | null>(null);
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [category, setCategory] = useState("General");
+  const [pages, setPages] = useState([{ title: "", description: "", imageFile: null as File | null, imagePreview: "" }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const videoInputRef = useRef<HTMLInputElement>(null);
-  const thumbnailInputRef = useRef<HTMLInputElement>(null);
-
-  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setVideoFile(file);
-      setVideoPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setThumbnailFile(file);
-      setThumbnailPreview(URL.createObjectURL(file));
-    }
-  };
 
   const getCookie = (name: string) => {
     const value = `; ${document.cookie}`;
@@ -60,23 +37,61 @@ export default function AddStoryPage() {
     return data.url;
   };
 
-  const handleSubmit = async (e: React.FormEvent, status: "active" | "inactive" = "active") => {
+  const handlePageChange = (index: number, field: string, value: string) => {
+    const newPages = [...pages];
+    newPages[index] = { ...newPages[index], [field]: value };
+    setPages(newPages);
+  };
+
+  const handleImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const newPages = [...pages];
+      newPages[index].imageFile = file;
+      newPages[index].imagePreview = URL.createObjectURL(file);
+      setPages(newPages);
+    }
+  };
+
+  const addPage = () => {
+    setPages([...pages, { title: "", description: "", imageFile: null, imagePreview: "" }]);
+  };
+
+  const removePage = (index: number) => {
+    if (pages.length === 1) return;
+    const newPages = pages.filter((_, i) => i !== index);
+    setPages(newPages);
+  };
+
+  const handleSubmit = async (e: React.FormEvent, status: "published" | "draft" = "published") => {
     e.preventDefault();
-    if (!title || !videoFile) {
-      alert("Title and Video are required");
+    if (!title) {
+      alert("Story Group Title is required");
       return;
+    }
+    
+    // Validate pages
+    for (let i = 0; i < pages.length; i++) {
+      if (!pages[i].imageFile || !pages[i].title || !pages[i].description) {
+        alert(`Page ${i + 1} is missing an image, title, or description.`);
+        return;
+      }
     }
 
     setIsSubmitting(true);
     try {
-      const videoUrl = await uploadFile(videoFile);
-      let thumbnailUrl = "";
-      if (thumbnailFile) {
-        thumbnailUrl = await uploadFile(thumbnailFile);
-      }
+      // Upload all images
+      const uploadedPages = await Promise.all(pages.map(async (page) => {
+        const imageUrl = await uploadFile(page.imageFile!);
+        return {
+          title: page.title,
+          description: page.description,
+          imageUrl
+        };
+      }));
 
       const token = getCookie("token");
-      const res = await fetch("/api/storys", {
+      const res = await fetch("/api/stories", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -84,9 +99,8 @@ export default function AddStoryPage() {
         },
         body: JSON.stringify({
           title,
-          description,
-          videoUrl,
-          thumbnailUrl,
+          category,
+          pages: uploadedPages,
           status
         })
       });
@@ -97,7 +111,7 @@ export default function AddStoryPage() {
       }
 
       if (res.ok) {
-        router.push("/dashboard/storys");
+        router.push("/dashboard/stories");
       } else {
         const errorData = await res.json();
         alert("Failed to create story: " + errorData.message);
@@ -111,93 +125,112 @@ export default function AddStoryPage() {
   };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, "active")} className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-[1200px]">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-8">
+    <form onSubmit={(e) => handleSubmit(e, "published")} className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-[1200px]">
+      <div className="space-y-8">
         
-        {/* Left Column */}
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <Label className="text-black font-bold text-base">Story Title/Headline</Label>
-            <Input 
-              placeholder="Enter title" 
-              className="bg-white border-gray-200 h-12"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-black font-bold text-base">Summary/Caption</Label>
-            <Textarea 
-              placeholder="Enter summary" 
-              className="bg-white border-gray-200 min-h-[160px] resize-none"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+        {/* Story Group Details */}
+        <div className="space-y-6 pb-6 border-b border-gray-200">
+          <h3 className="text-xl font-bold">Story Group Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-black font-bold text-base">Story Group Name</Label>
+              <Input 
+                placeholder="Internal name for this story group" 
+                className="bg-white border-gray-200 h-12"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-black font-bold text-base">Category</Label>
+              <Input 
+                placeholder="e.g. Tech, Business" 
+                className="bg-white border-gray-200 h-12"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                required
+              />
+            </div>
           </div>
         </div>
 
-        {/* Right Column */}
-        <div className="space-y-8">
-          <div className="space-y-2">
-            <Label className="text-black font-bold text-base">Upload Video</Label>
-            <div 
-              onClick={() => videoInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 flex items-center justify-between overflow-hidden h-[180px] cursor-pointer hover:bg-gray-100 transition-colors"
-            >
-              <input 
-                type="file" 
-                accept="video/*" 
-                className="hidden" 
-                ref={videoInputRef}
-                onChange={handleVideoChange}
-              />
-              <div className="flex-1 px-8 text-center sm:text-left">
-                {videoFile ? (
-                  <p className="text-green-600 font-medium truncate max-w-[200px]">{videoFile.name}</p>
-                ) : (
-                  <p className="text-gray-500 font-medium">
-                    Drag & drop video here or click to <br className="hidden sm:block" />
-                    <span className="text-[#3b82f6] cursor-pointer hover:underline">browse</span>
-                  </p>
-                )}
-              </div>
-              <div className="w-[200px] h-full bg-gray-200 relative flex items-center justify-center text-gray-400">
-                {videoPreview ? (
-                  <video src={videoPreview} className="object-cover w-full h-full" muted />
-                ) : (
-                  <span>No Video</span>
-                )}
-              </div>
-            </div>
+        {/* Web Story Pages */}
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-bold">Web Story Pages</h3>
+            <Button type="button" onClick={addPage} variant="outline" className="flex items-center gap-2">
+              <Plus size={16} /> Add Page
+            </Button>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-black font-bold text-base">Upload Thumbnail (Optional)</Label>
-            <div 
-              onClick={() => thumbnailInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 flex flex-col items-center justify-center h-[200px] cursor-pointer hover:bg-gray-100 transition-colors overflow-hidden relative w-[112px] mx-auto"
-            >
-              <input 
-                type="file" 
-                accept="image/*" 
-                className="hidden" 
-                ref={thumbnailInputRef}
-                onChange={handleThumbnailChange}
-              />
-              {thumbnailPreview ? (
-                <Image src={thumbnailPreview} alt="Thumbnail preview" fill className="object-cover" />
-              ) : (
-                <>
-                  <Upload className="w-8 h-8 text-[#E0202B] mb-2" />
-                  <p className="text-gray-500 font-medium text-xs text-center px-2">Click to upload thumbnail</p>
-                </>
-              )}
-            </div>
-            <p className="text-sm text-gray-500 mt-1 text-center">Recommended dimensions: 1080x1920px (9:16 ratio)</p>
-          </div>
+          <div className="space-y-8">
+            {pages.map((page, index) => (
+              <div key={index} className="p-6 border border-gray-200 rounded-xl relative bg-gray-50">
+                {pages.length > 1 && (
+                  <button 
+                    type="button" 
+                    onClick={() => removePage(index)}
+                    className="absolute top-4 right-4 text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                )}
+                
+                <h4 className="font-bold mb-4">Page {index + 1}</h4>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Page Image */}
+                  <div className="space-y-2">
+                    <Label className="text-black font-bold">Background Image (9:16)</Label>
+                    <div className="relative">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                        onChange={(e) => handleImageChange(index, e)}
+                        required={!page.imagePreview}
+                      />
+                      <div className="border-2 border-dashed border-gray-300 rounded-xl bg-white flex flex-col items-center justify-center h-[300px] hover:bg-gray-50 transition-colors overflow-hidden w-[168px]">
+                        {page.imagePreview ? (
+                          <Image src={page.imagePreview} alt={`Page ${index + 1}`} fill className="object-cover" />
+                        ) : (
+                          <>
+                            <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                            <p className="text-gray-500 font-medium text-xs text-center px-2">Upload Image</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
 
+                  {/* Page Text */}
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-black font-bold">Page Title / Headline</Label>
+                      <Input 
+                        placeholder="Page Headline" 
+                        className="bg-white border-gray-200"
+                        value={page.title}
+                        onChange={(e) => handlePageChange(index, "title", e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-black font-bold">Page Description</Label>
+                      <Textarea 
+                        placeholder="Write the description text for this page..." 
+                        className="bg-white border-gray-200 min-h-[150px] resize-y"
+                        value={page.description}
+                        onChange={(e) => handlePageChange(index, "description", e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -210,7 +243,7 @@ export default function AddStoryPage() {
           type="button"
           variant="secondary" 
           disabled={isSubmitting}
-          onClick={(e) => handleSubmit(e, "inactive")}
+          onClick={(e) => handleSubmit(e, "draft")}
           className="bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-full px-6 font-medium"
         >
           {isSubmitting ? "Saving..." : "Save as Draft"}
@@ -218,7 +251,7 @@ export default function AddStoryPage() {
         <Button 
           type="submit"
           disabled={isSubmitting}
-          onClick={(e) => handleSubmit(e, "active")}
+          onClick={(e) => handleSubmit(e, "published")}
           className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full px-8 font-bold"
         >
           {isSubmitting ? "Publishing..." : "Publish"}

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../services/api_service.dart';
+import '../../services/translation_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 // --- Data Models ---
 class StoryPageData {
   final String imageUrl;
@@ -29,39 +33,7 @@ class StoryGroupData {
 }
 
 // --- Dummy Data ---
-final List<StoryGroupData> dummyStories = [
-  StoryGroupData(
-    id: 'group1',
-    pages: [
-      StoryPageData(
-        imageUrl: 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?q=80&w=1000&auto=format&fit=crop',
-        category: 'Tech',
-        title: 'Innovative Tech Trends to Watch in 2023',
-        byline: 'By AsiaZe · 2 hours ago',
-        description: 'Dive into the latest technological advancements that are set to revolutionize industries in 2023. From AI breakthroughs to sustainable tech solutions, explore the innovations shaping our future.',
-      ),
-      StoryPageData(
-        imageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop',
-        category: 'Tech',
-        title: 'AI is taking over the world',
-        byline: 'By AsiaZe · 4 hours ago',
-        description: 'Learn how Artificial Intelligence is becoming a core part of our daily lives, from smart homes to advanced healthcare diagnostics.',
-      ),
-    ],
-  ),
-  StoryGroupData(
-    id: 'group2',
-    pages: [
-      StoryPageData(
-        imageUrl: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=1000&auto=format&fit=crop',
-        category: 'Business',
-        title: 'Global Markets See Unprecedented Growth',
-        byline: 'By AsiaZe · 5 hours ago',
-        description: 'A deep dive into the recent surge in global markets, analyzing the key drivers and predicting what comes next for investors.',
-      ),
-    ],
-  ),
-];
+final List<StoryGroupData> dummyStories = [];
 
 // --- Stories Screen (Outer PageView) ---
 class StoriesScreen extends StatefulWidget {
@@ -80,13 +52,75 @@ class StoriesScreen extends StatefulWidget {
 
 class _StoriesScreenState extends State<StoriesScreen> {
   late PageController _pageController;
-  late List<StoryGroupData> _stories;
+  List<StoryGroupData> _stories = [];
+  bool _isLoading = true;
+  String _langCode = 'EN';
 
   @override
   void initState() {
     super.initState();
-    _stories = widget.stories ?? dummyStories;
     _pageController = PageController(initialPage: widget.initialIndex);
+    if (widget.stories != null) {
+      _stories = widget.stories!;
+      _isLoading = false;
+    } else {
+      _fetchStories();
+    }
+  }
+
+  Future<void> _fetchStories() async {
+    final prefs = await SharedPreferences.getInstance();
+    _langCode = prefs.getString('selectedLanguage') ?? 'EN';
+
+    try {
+      final data = await ApiService.getStories();
+      
+      List<StoryGroupData> mappedStories = [];
+      for (var group in data) {
+        List<StoryPageData> mappedPages = [];
+        
+        for (var page in group['pages']) {
+          String title = page['title'] ?? '';
+          String description = page['description'] ?? '';
+          String category = group['category'] ?? 'General';
+          
+          if (_langCode != 'EN') {
+            title = await TranslationService.translateText(title, _langCode);
+            description = await TranslationService.translateText(description, _langCode);
+            category = await TranslationService.translateText(category, _langCode);
+          }
+          
+          mappedPages.add(StoryPageData(
+            imageUrl: 'https://asiaze.cloud${page['imageUrl']}',
+            category: category,
+            title: title,
+            byline: 'By ASIAZE',
+            description: description,
+          ));
+        }
+        
+        if (mappedPages.isNotEmpty) {
+          mappedStories.add(StoryGroupData(
+            id: group['_id'],
+            pages: mappedPages,
+          ));
+        }
+      }
+      
+      if (mounted) {
+        setState(() {
+          _stories = mappedStories;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading stories: $e");
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -123,6 +157,37 @@ class _StoriesScreenState extends State<StoriesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator(color: Color(0xFFDC143C))),
+      );
+    }
+
+    if (_stories.isEmpty) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.amp_stories, size: 64, color: Colors.grey.shade600),
+              const SizedBox(height: 16),
+              Text(
+                'No stories available',
+                style: GoogleFonts.lexendDeca(color: Colors.white70, fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Go Back', style: TextStyle(color: Color(0xFFDC143C))),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: PageView.builder(
