@@ -26,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<String> _tabs = [
     'My Feed',
     'Stories',
-    'Videos',
+    'Reels',
     'Business',
     'Tech',
     'Finance',
@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
   
   String _tLocal = 'Local';
   String _tStories = 'Stories';
-  String _tVideos = 'Videos';
+  String _tReels = 'Reels';
 
   @override
   void initState() {
@@ -72,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _tCheckBackLater = await TranslationService.translateText('Check back later for more news.', _langCode);
       _tLocal = await TranslationService.translateText('Local', _langCode);
       _tStories = await TranslationService.translateText('Stories', _langCode);
-      _tVideos = await TranslationService.translateText('Videos', _langCode);
+      _tReels = await TranslationService.translateText('Reels', _langCode);
       
       // Translate tabs
       List<String> translatedTabs = [];
@@ -402,7 +402,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                   _fetchFeed(); // Add this to reload feed based on tab
                   
-                  if (tab == _tVideos) {
+                  if (tab == _tReels) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const ReelsScreen()),

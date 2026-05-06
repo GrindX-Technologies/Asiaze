@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../auth/login_screen.dart';
+import '../home/home_screen.dart';
 import '../explore/category_detail_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -13,6 +15,19 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedLang = 'EN';
   bool _notificationsEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLang = prefs.getString('selectedLanguage') ?? 'EN';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -171,9 +186,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildLangChip(String lang) {
     final isSelected = _selectedLang == lang;
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         setState(() {
           _selectedLang = lang;
+        });
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('selectedLanguage', lang);
+        
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Language updated! Returning to Home to apply changes.')),
+        );
+        
+        // Navigate back to home to refresh app state with new language
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            (route) => false,
+          );
         });
       },
       child: Container(

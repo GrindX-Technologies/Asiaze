@@ -13,6 +13,7 @@ import userRoutes from './routes/userRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import settingRoutes from './routes/settingRoutes';
 import couponRoutes from './routes/couponRoutes';
+import storyRoutes from './routes/storyRoutes';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/coupons', couponRoutes);
+app.use('/api/stories', storyRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 

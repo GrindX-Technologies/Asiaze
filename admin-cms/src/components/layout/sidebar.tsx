@@ -31,6 +31,14 @@ const sidebarNavItems = [
     ],
   },
   {
+    title: "Manage Stories",
+    href: "/dashboard/stories",
+    items: [
+      { title: "All Stories List", href: "/dashboard/stories" },
+      { title: "Add Story", href: "/dashboard/stories/add" },
+    ],
+  },
+  {
     title: "Users Management",
     href: "/dashboard/users",
   },
