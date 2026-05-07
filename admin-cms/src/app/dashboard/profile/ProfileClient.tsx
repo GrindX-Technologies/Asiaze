@@ -26,7 +26,10 @@ export default function ProfileClient({ token }: { token: string }) {
     const fetchProfile = async () => {
       try {
         const currentToken = getClientToken();
-        if (!currentToken) return;
+        if (!currentToken) {
+          setMessage({ text: "Not authorized, token failed", type: "error" });
+          return;
+        }
 
         const res = await fetch("/api/auth/profile", {
           headers: { Authorization: `Bearer ${currentToken}` }
@@ -35,6 +38,8 @@ export default function ProfileClient({ token }: { token: string }) {
           const data = await res.json();
           setName(data.name || "");
           setEmail(data.email || "");
+        } else {
+          setMessage({ text: "Not authorized, token failed", type: "error" });
         }
       } catch (err) {
         console.error("Failed to fetch profile", err);
@@ -43,7 +48,7 @@ export default function ProfileClient({ token }: { token: string }) {
       }
     };
     fetchProfile();
-  }, []);
+  }, [token]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();

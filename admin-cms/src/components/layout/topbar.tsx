@@ -37,7 +37,7 @@ export function Topbar({ token }: { token?: string }) {
       }
     };
     fetchProfile();
-  }, []);
+  }, [token]);
 
   return (
     <div className="flex h-16 items-center px-8 border-b bg-[#F8F8F8] border-gray-200">
