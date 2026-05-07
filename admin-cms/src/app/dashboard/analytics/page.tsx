@@ -20,10 +20,12 @@ export default function AnalyticsPage() {
   const [topArticles, setTopArticles] = useState<any[]>([]);
   const [topReels, setTopReels] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setFetchError(null);
         const getCookie = (name: string) => {
           const value = `; ${document.cookie}`;
           const parts = value.split(`; ${name}=`);
@@ -39,10 +41,17 @@ export default function AnalyticsPage() {
           fetch("/api/categories", { headers: { Authorization: `Bearer ${token}` } })
         ]);
 
-        const users = usersRes.ok ? await usersRes.json() : [];
-        const news = newsRes.ok ? await newsRes.json() : [];
-        const reels = reelsRes.ok ? await reelsRes.json() : [];
+        const usersData = usersRes.ok ? await usersRes.json() : [];
+        const newsData = newsRes.ok ? await newsRes.json() : [];
+        const reelsData = reelsRes.ok ? await reelsRes.json() : [];
         const categories = categoriesRes.ok ? await categoriesRes.json() : [];
+        const users = Array.isArray(usersData) ? usersData : usersData.users || [];
+        const news = Array.isArray(newsData) ? newsData : newsData.news || [];
+        const reels = Array.isArray(reelsData) ? reelsData : reelsData.reels || [];
+
+        if (!usersRes.ok || !newsRes.ok || !reelsRes.ok || !categoriesRes.ok) {
+          setFetchError("Some analytics data could not be loaded due to auth or API issues.");
+        }
 
         // KPI Stats
         const activeUsersCount = users.filter((u: any) => u.status === 'active' || u.status === 'Active').length;
@@ -99,6 +108,7 @@ export default function AnalyticsPage() {
         ]);
 
       } catch (err) {
+        setFetchError("Failed to fetch analytics data");
         console.error("Failed to fetch analytics", err);
       } finally {
         setIsLoading(false);
@@ -112,6 +122,11 @@ export default function AnalyticsPage() {
   }
   return (
     <div className="space-y-8">
+      {fetchError && (
+        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {fetchError}
+        </div>
+      )}
       
       {/* Header */}
       <div className="flex items-center justify-between">

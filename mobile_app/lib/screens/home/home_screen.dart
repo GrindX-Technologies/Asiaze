@@ -23,15 +23,13 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentNavIndex = 1; // 1 = Home (based on PRD/Figma)
   bool _isLoading = true;
 
-  final List<String> _tabs = [
+  List<String> _tabs = [
     'My Feed',
     'Stories',
     'Reels',
-    'Business',
-    'Tech',
-    'Finance',
-    'Entertainment',
   ];
+  List<String> _selectedCategories = ['Politics', 'Entertainment'];
+  Map<String, String> _categoryNameToId = {};
 
   String _activeTab = 'My Feed';
 
@@ -61,9 +59,37 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _langCode = prefs.getString('selectedLanguage') ?? 'EN';
       _userState = prefs.getString('userState');
+      _selectedCategories = prefs.getStringList('selectedCategories') ?? ['Politics', 'Entertainment'];
     });
 
+    // Fetch dynamic categories
+    List<String> priorityCategories = [];
+    List<String> otherCategories = [];
+    try {
+      final categories = await ApiService.getCategories();
+      for (var cat in categories) {
+        String name = cat['name'];
+        _categoryNameToId[name] = cat['_id'];
+        if (_selectedCategories.contains(name)) {
+          priorityCategories.add(name);
+        } else {
+          otherCategories.add(name);
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to load categories: $e');
+    }
+
+    _tabs = [
+      'My Feed',
+      'Stories',
+      'Reels',
+      ...priorityCategories,
+      ...otherCategories
+    ];
+
     // Translate UI strings if needed
+    Map<String, String> translatedToEnglish = {};
     if (_langCode != 'EN') {
       _tBreakingNews = await TranslationService.translateText('Breaking News: Major updates from around the world...', _langCode);
       _tLoadNewFeed = await TranslationService.translateText('Load New Feed', _langCode);
@@ -77,39 +103,64 @@ class _HomeScreenState extends State<HomeScreen> {
       // Translate tabs
       List<String> translatedTabs = [];
       for (String tab in _tabs) {
-        translatedTabs.add(await TranslationService.translateText(tab, _langCode));
+        String tTab = await TranslationService.translateText(tab, _langCode);
+        translatedTabs.add(tTab);
+        translatedToEnglish[tTab] = tab;
       }
       _tabs.clear();
       _tabs.addAll(translatedTabs);
       _activeTab = _tabs[0];
+    } else {
+      for (String tab in _tabs) {
+        translatedToEnglish[tab] = tab;
+      }
     }
     
     if (_userState != null && _userState!.isNotEmpty && !_tabs.contains(_tLocal)) {
       _tabs.insert(0, _tLocal);
+      translatedToEnglish[_tLocal] = 'Local';
       _activeTab = _tLocal;
     }
     
+    // Save mapping for later use
+    _translatedToEnglishTabs = translatedToEnglish;
+    
     await _fetchFeed();
   }
+
+  Map<String, String> _translatedToEnglishTabs = {};
 
   Future<void> _fetchFeed() async {
     setState(() {
       _isLoading = true;
     });
     try {
-      // Find original tab name if translated
       String apiQueryState = '';
-      if (_userState != null && _activeTab == _tLocal) {
+      String apiQueryCategory = '';
+      String englishTab = _translatedToEnglishTabs[_activeTab] ?? _activeTab;
+
+      if (_userState != null && englishTab == 'Local') {
         apiQueryState = _userState!;
+      } else if (englishTab != 'My Feed' && englishTab != 'Stories' && englishTab != 'Reels') {
+        if (_categoryNameToId.containsKey(englishTab)) {
+          apiQueryCategory = _categoryNameToId[englishTab]!;
+        }
       }
 
-      final data = await ApiService.getNews(state: apiQueryState.isNotEmpty ? apiQueryState : null);
+      final data = await ApiService.getNews(
+        state: apiQueryState.isNotEmpty ? apiQueryState : null,
+        category: apiQueryCategory.isNotEmpty ? apiQueryCategory : null,
+      );
       
       List<dynamic> mappedData = [];
       for (var item in data) {
         String title = item['title'] ?? 'No Title';
         String excerpt = item['summary'] ?? item['content'] ?? 'No Description';
         String content = item['content'] ?? '';
+        String categoryName = '';
+        if (item['category'] != null && item['category'] is Map) {
+          categoryName = item['category']['name'] ?? '';
+        }
         
         if (_langCode != 'EN') {
           title = await TranslationService.translateText(title, _langCode);
@@ -124,6 +175,17 @@ class _HomeScreenState extends State<HomeScreen> {
           'meta': '${_formatDate(item['createdAt'])} | ${item['source'] ?? 'ASIAZE'}',
           'coverImage': item['coverImage'],
           'content': content,
+          'categoryName': categoryName,
+        });
+      }
+      
+      if (englishTab == 'My Feed') {
+        mappedData.sort((a, b) {
+          bool aIsSelected = _selectedCategories.contains(a['categoryName']);
+          bool bIsSelected = _selectedCategories.contains(b['categoryName']);
+          if (aIsSelected && !bIsSelected) return -1;
+          if (!aIsSelected && bIsSelected) return 1;
+          return 0; // Keep original date sort if both match or both don't match
         });
       }
       
@@ -375,13 +437,11 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       elevation: 0,
       centerTitle: true,
-      title: Text(
-        'asiaze',
-        style: GoogleFonts.lexendDeca(
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFFDC143C),
-          letterSpacing: -1,
+      title: Container(
+        height: 36, // Fixed height to constrain the image appropriately
+        child: Image.asset(
+          'assets/images/header_logo.png',
+          fit: BoxFit.contain,
         ),
       ),
       bottom: PreferredSize(

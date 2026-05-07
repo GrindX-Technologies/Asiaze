@@ -1,12 +1,30 @@
 import { Request, Response } from 'express';
 import User from '../models/User';
 
-// @desc    Get all users
+// @desc    Get user rewards and referral info
+// @route   GET /api/users/rewards
+// @access  Private
+export const getUserRewards = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await User.findById((req as any).user._id).select('points referralId');
+    if (user) {
+      res.json({
+        points: user.points,
+        referralId: user.referralId,
+      });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
 // @route   GET /api/users
 // @access  Private/Admin
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
   try {
-    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
+    // Only return app users (role: 'user'), exclude admin users
+    const users = await User.find({ role: 'user' }).select('-password').sort({ createdAt: -1 });
     res.json(users);
   } catch (error: any) {
     res.status(500).json({ message: error.message });

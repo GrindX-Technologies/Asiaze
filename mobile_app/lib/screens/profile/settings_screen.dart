@@ -3,7 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../auth/login_screen.dart';
 import '../home/home_screen.dart';
-import '../explore/category_detail_screen.dart';
+import '../setup/preferences_screen.dart';
+import 'privacy_policy_screen.dart';
+import 'terms_screen.dart';
+import 'about_us_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -93,7 +96,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const CategoryDetailScreen(categoryName: 'Sports'),
+                    builder: (context) => const PreferencesScreen(isFromSettings: true),
                   ),
                 );
               },
@@ -124,7 +127,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.description,
               title: 'Privacy Policy',
               trailing: const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()),
+                );
+              },
             ),
             
             // Terms & Conditions
@@ -132,7 +140,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.description,
               title: 'Terms & Conditions',
               trailing: const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const TermsScreen()),
+                );
+              },
             ),
             
             // About Us
@@ -140,7 +153,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.info_outline,
               title: 'About Us',
               trailing: const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AboutUsScreen()),
+                );
+              },
             ),
             
             const SizedBox(height: 40),

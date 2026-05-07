@@ -1,12 +1,156 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/api_service.dart';
+import '../../constants/states.dart';
 import '../auth/login_screen.dart';
 import 'saved_articles_screen.dart';
 import 'rewards_screen.dart';
 import 'settings_screen.dart';
+import 'edit_profile_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  Map<String, dynamic>? _userProfile;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final profile = await ApiService.getProfile();
+      if (profile['preferredCategories'] != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setStringList('selectedCategories', List<String>.from(profile['preferredCategories']));
+      }
+      setState(() {
+        _userProfile = profile;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load profile: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() => _isLoading = true);
+      try {
+        final bytes = await pickedFile.readAsBytes();
+        final uploadedUrl = await ApiService.uploadAvatar(bytes, pickedFile.name);
+        
+        // Update user profile with new avatar URL
+        await ApiService.updateProfile({
+          'avatar': uploadedUrl,
+        });
+
+        // Refresh profile
+        await _fetchProfile();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile image updated successfully!')),
+          );
+        }
+      } catch (e) {
+        setState(() => _isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to upload image: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  void _showStateSelectionBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (BuildContext sheetContext) {
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Select Your State',
+                style: GoogleFonts.lexendDeca(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+            const Divider(height: 1, color: Color(0xFFE2E8F0)),
+            Expanded(
+              child: ListView.builder(
+                itemCount: IndianStates.list.length,
+                itemBuilder: (context, index) {
+                  final state = IndianStates.list[index];
+                  return ListTile(
+                    title: Text(
+                      state,
+                      style: GoogleFonts.roboto(fontSize: 16, color: Colors.black),
+                    ),
+                    trailing: _userProfile?['state'] == state
+                        ? const Icon(Icons.check, color: Color(0xFFDC143C))
+                        : null,
+                    onTap: () async {
+                      Navigator.pop(sheetContext);
+                      if (_userProfile?['state'] != state) {
+                        setState(() => _isLoading = true);
+                        try {
+                          await ApiService.updateProfile({'state': state});
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setString('userState', state);
+                          await _fetchProfile();
+                          if (mounted) {
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              const SnackBar(content: Text('State updated successfully')),
+                            );
+                          }
+                        } catch (e) {
+                          setState(() => _isLoading = false);
+                          if (mounted) {
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              SnackBar(content: Text('Error updating state: $e')),
+                            );
+                          }
+                        }
+                      }
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,50 +177,126 @@ class ProfileScreen extends StatelessWidget {
           child: Divider(height: 1, color: Color(0xFFE2E8F0)),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 32),
-            // Avatar
-            Container(
-              width: 100,
-              height: 100,
-              decoration: const BoxDecoration(
-                color: Color(0xFFD1D5DB),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  'AB',
-                  style: GoogleFonts.roboto(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w500,
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator(color: Color(0xFFDC143C)))
+        : SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 32),
+              
+              // Profile Card
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Container(
+                  padding: const EdgeInsets.all(24.0),
+                  decoration: BoxDecoration(
                     color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(15),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F4F6),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: const Color(0xFFE5E7EB), width: 4),
+                              image: _userProfile?['avatar'] != null && _userProfile!['avatar'].isNotEmpty
+                                  ? DecorationImage(
+                                      image: NetworkImage(_userProfile!['avatar']),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child: _userProfile?['avatar'] == null || _userProfile!['avatar'].isEmpty
+                                ? Center(
+                                    child: Text(
+                                      _userProfile?['name'] != null && _userProfile!['name'].isNotEmpty
+                                          ? _userProfile!['name'].substring(0, 1).toUpperCase()
+                                          : 'U',
+                                      style: GoogleFonts.roboto(
+                                        fontSize: 48,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF9CA3AF),
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          GestureDetector(
+                            onTap: _pickAndUploadImage,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFDC143C),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              _userProfile?['name'] ?? 'User Name',
+                              style: GoogleFonts.lexendDeca(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.black,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () async {
+                              if (_userProfile != null) {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => EditProfileScreen(userProfile: _userProfile!),
+                                  ),
+                                );
+                                if (result == true) {
+                                  _fetchProfile();
+                                }
+                              }
+                            },
+                            child: const Icon(Icons.edit_square, color: Color(0xFFDC143C), size: 24),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _userProfile?['email'] ?? 'user@example.com',
+                        style: GoogleFonts.roboto(
+                          fontSize: 14,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Alex Brown',
-              style: GoogleFonts.roboto(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'alex.brown@example.com',
-              style: GoogleFonts.roboto(
-                fontSize: 16,
-                color: const Color(0xFF6B7280),
-              ),
-            ),
-            const SizedBox(height: 40),
-            
-            // Menu List
+              const SizedBox(height: 40),
+              
+              // Menu List
             _buildMenuItem(
               icon: Icons.bookmark,
               title: 'Saved Articles',
@@ -113,8 +333,12 @@ class ProfileScreen extends StatelessWidget {
             _buildMenuItem(
               icon: Icons.location_on,
               title: 'Your State :',
-              trailing: 'West Bengal',
-              onTap: () {},
+              trailing: _userProfile?['state'] ?? 'Not set',
+              onTap: () {
+                if (_userProfile != null) {
+                  _showStateSelectionBottomSheet();
+                }
+              },
             ),
             const Divider(height: 1, color: Color(0xFFE2E8F0)),
             

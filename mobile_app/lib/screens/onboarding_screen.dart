@@ -15,17 +15,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, String>> _onboardingData = [
     {
-      "image": "assets/images/onboarding_1.png",
+      "image": "assets/images/onboarding_1.gif",
       "headline": "Stay Updated in Seconds",
       "subtext": "Read short 60-word news summaries instantly",
     },
     {
-      "image": "assets/images/onboarding_2.png",
+      "image": "assets/images/onboarding_2.gif",
       "headline": "News in English, Hindi & Bengali",
       "subtext": "Read short 60-word news summaries instantly",
     },
     {
-      "image": "assets/images/onboarding_3.png",
+      "image": "assets/images/onboarding_3.gif",
       "headline": "Watch Short News Reels Instantly",
       "subtext": "Scroll through quick video updates anytime",
     }
@@ -143,24 +143,40 @@ class OnboardingContent extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // App Logo for Onboarding
+          // Dynamic Image/GIF for Onboarding
           Container(
-            height: 250,
-            width: 250,
+            height: 300, // Make it taller for the illustration
+            width: double.infinity,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withAlpha(20),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  color: Colors.black.withAlpha(10),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
                 ),
               ],
             ),
-            child: ClipOval(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
               child: Image.asset(
-                'assets/images/logo.png',
-                fit: BoxFit.cover,
+                image,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  // Fallback in case the file is not yet placed in assets
+                  return Container(
+                    color: const Color(0xFFF3F4F6),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
+                          const SizedBox(height: 8),
+                          Text('Missing image: $image', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),

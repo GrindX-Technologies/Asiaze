@@ -16,13 +16,16 @@ import {
 export default function RewardsManagementPage() {
   const [coupons, setCoupons] = useState<any[]>([]);
   const [pointsForSharing, setPointsForSharing] = useState("15");
+  const [pointsPerReferral, setPointsPerReferral] = useState("10");
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isAddCouponModalOpen, setIsAddCouponModalOpen] = useState(false);
 
   // Add Coupon Form
   const [couponCode, setCouponCode] = useState("");
+  const [couponTitle, setCouponTitle] = useState("");
   const [appLink, setAppLink] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [requiredPoints, setRequiredPoints] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +56,10 @@ export default function RewardsManagementPage() {
         if (shareSetting) {
           setPointsForSharing(shareSetting.value.toString());
         }
+        const referralSetting = settingsData.find((s: any) => s.key === "pointsPerReferral");
+        if (referralSetting) {
+          setPointsPerReferral(referralSetting.value.toString());
+        }
       }
     } catch (err) {
       console.error(err);
@@ -72,7 +79,8 @@ export default function RewardsManagementPage() {
     setIsSavingSettings(true);
     try {
       const token = getCookie("token");
-      const res = await fetch("/api/settings", {
+      
+      const res1 = await fetch("/api/settings", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -85,7 +93,22 @@ export default function RewardsManagementPage() {
           description: "Points awarded to user when they share an article or reel"
         })
       });
-      if (res.ok) {
+
+      const res2 = await fetch("/api/settings", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          key: "pointsPerReferral",
+          value: Number(pointsPerReferral),
+          group: "points",
+          description: "Points awarded to a user when their referral code is used"
+        })
+      });
+
+      if (res1.ok && res2.ok) {
         alert("Reward settings saved successfully!");
       } else {
         alert("Failed to save settings.");
@@ -99,8 +122,8 @@ export default function RewardsManagementPage() {
 
   const handleAddCoupon = async () => {
     setError(null);
-    if (!couponCode || !appLink || !requiredPoints) {
-      setError("All fields are required.");
+    if (!couponCode || !couponTitle || !appLink || !requiredPoints) {
+      setError("All fields except image URL are required.");
       return;
     }
     
@@ -114,7 +137,9 @@ export default function RewardsManagementPage() {
         },
         body: JSON.stringify({
           code: couponCode,
+          title: couponTitle,
           appLink,
+          imageUrl,
           requiredPoints: Number(requiredPoints),
           isActive: true
         })
@@ -123,7 +148,9 @@ export default function RewardsManagementPage() {
       if (res.ok) {
         setIsAddCouponModalOpen(false);
         setCouponCode("");
+        setCouponTitle("");
         setAppLink("");
+        setImageUrl("");
         setRequiredPoints("");
         fetchData();
       } else {
@@ -170,6 +197,15 @@ export default function RewardsManagementPage() {
                 type="number" 
                 value={pointsForSharing}
                 onChange={(e) => setPointsForSharing(e.target.value)}
+                className="bg-white border-gray-200" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-black font-bold text-sm">Points per Referral</label>
+              <Input 
+                type="number" 
+                value={pointsPerReferral}
+                onChange={(e) => setPointsPerReferral(e.target.value)}
                 className="bg-white border-gray-200" 
               />
             </div>
@@ -272,10 +308,28 @@ export default function RewardsManagementPage() {
               />
             </div>
             <div className="space-y-2">
+              <label className="text-black font-bold text-sm">Title</label>
+              <Input 
+                value={couponTitle} 
+                onChange={(e) => setCouponTitle(e.target.value)} 
+                className="bg-white border-gray-200" 
+                placeholder="e.g. ₹100 Amazon Gift Card" 
+              />
+            </div>
+            <div className="space-y-2">
               <label className="text-black font-bold text-sm">App Link (Promotion URL)</label>
               <Input 
                 value={appLink} 
                 onChange={(e) => setAppLink(e.target.value)} 
+                className="bg-white border-gray-200" 
+                placeholder="https://..." 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-black font-bold text-sm">Image URL (Optional)</label>
+              <Input 
+                value={imageUrl} 
+                onChange={(e) => setImageUrl(e.target.value)} 
                 className="bg-white border-gray-200" 
                 placeholder="https://..." 
               />

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { useToken } from "@/components/TokenProvider";
 import {
   LineChart,
   Line,
@@ -52,28 +53,33 @@ export default function DashboardPage() {
   const [latestReels, setLatestReels] = useState<ReelItem[]>([]);
   const [lineChartData, setLineChartData] = useState<ChartData[]>([]);
   const [barChartData, setBarChartData] = useState<ChartData[]>([]);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const token = useToken();
 
   useEffect(() => {
     // Fetch stats and lists from the backend API
     const fetchData = async () => {
       try {
-        const getCookie = (name: string) => {
-          const value = `; ${document.cookie}`;
-          const parts = value.split(`; ${name}=`);
-          if (parts.length === 2) return parts.pop()?.split(';').shift();
-          return "";
-        };
-        const token = getCookie("token");
+        setFetchError(null);
+        
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
         
         const [newsRes, reelsRes, usersRes] = await Promise.all([
-          fetch("/api/news", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("/api/reels", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("/api/users", { headers: { Authorization: `Bearer ${token}` } })
+          fetch(`${apiUrl}/api/news`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${apiUrl}/api/reels`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${apiUrl}/api/users`, { headers: { Authorization: `Bearer ${token}` } })
         ]);
 
-        const news = newsRes.ok ? await newsRes.json() : [];
-        const reels = reelsRes.ok ? await reelsRes.json() : [];
-        const users = usersRes.ok ? await usersRes.json() : [];
+        const newsData = newsRes.ok ? await newsRes.json() : [];
+        const reelsData = reelsRes.ok ? await reelsRes.json() : [];
+        const usersData = usersRes.ok ? await usersRes.json() : [];
+        const news = Array.isArray(newsData) ? newsData : newsData.news || [];
+        const reels = Array.isArray(reelsData) ? reelsData : reelsData.reels || [];
+        const users = Array.isArray(usersData) ? usersData : usersData.users || [];
+
+        if (!newsRes.ok || !reelsRes.ok || !usersRes.ok) {
+          setFetchError("Some dashboard data could not be loaded due to auth or API issues.");
+        }
 
         // Calculate total bookmarks/shares (likes + shares from news and reels)
         let totalInteractions = 0;
@@ -94,8 +100,7 @@ export default function DashboardPage() {
         setLatestNews(news.slice(0, 5));
         setLatestReels(reels.slice(0, 5));
 
-        // Process line chart data (Daily Active Users simulation based on user registrations)
-        // Group users by creation date (last 7 days)
+        // Process line chart data (Daily Active Users based on user registrations)
         const processLineChart = () => {
           const last7Days = Array.from({length: 7}, (_, i) => {
             const d = new Date();
@@ -103,11 +108,16 @@ export default function DashboardPage() {
             return d.toISOString().split('T')[0];
           });
 
-          const data = last7Days.map(dateStr => {
+          const data = last7Days.map((dateStr, index) => {
             const current = users.filter((u: UserItem) => u.createdAt && u.createdAt.startsWith(dateStr)).length;
-            // Simulated previous period for comparison line
-            const previous = Math.floor(Math.random() * 10); 
-            return { name: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }), current: current * 5, previous: previous * 5 };
+            
+            // Real previous period calculation (7 days before the current dateStr)
+            const prevDate = new Date(dateStr);
+            prevDate.setDate(prevDate.getDate() - 7);
+            const prevDateStr = prevDate.toISOString().split('T')[0];
+            const previous = users.filter((u: UserItem) => u.createdAt && u.createdAt.startsWith(prevDateStr)).length;
+            
+            return { name: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }), current: current, previous: previous };
           });
           setLineChartData(data);
         };
@@ -125,12 +135,8 @@ export default function DashboardPage() {
             const dayNews = news.filter((n: NewsItem) => n.createdAt && n.createdAt.startsWith(dateStr));
             const dayReels = reels.filter((r: ReelItem) => r.createdAt && r.createdAt.startsWith(dateStr));
             
-            let articleEngagement = dayNews.reduce((sum: number, n: NewsItem) => sum + (n.views || 0) + (n.likes || 0), 0);
-            let videoEngagement = dayReels.reduce((sum: number, r: ReelItem) => sum + (r.views || 0) + (r.likes || 0), 0);
-
-            // Add small offset if zero just to show activity
-            if (articleEngagement === 0 && dayNews.length > 0) articleEngagement = dayNews.length * 10;
-            if (videoEngagement === 0 && dayReels.length > 0) videoEngagement = dayReels.length * 10;
+            const articleEngagement = dayNews.reduce((sum: number, n: NewsItem) => sum + (n.views || 0) + (n.likes || 0), 0);
+            const videoEngagement = dayReels.reduce((sum: number, r: ReelItem) => sum + (r.views || 0) + (r.likes || 0), 0);
 
             return { 
               name: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }), 
@@ -143,15 +149,21 @@ export default function DashboardPage() {
         processBarChart();
 
       } catch (err) {
+        setFetchError("Failed to load dashboard data");
         console.error("Error fetching dashboard data:", err);
       }
     };
 
     fetchData();
-  }, []);
+  }, [token]);
 
   return (
     <div className="space-y-8">
+      {fetchError && (
+        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {fetchError}
+        </div>
+      )}
       {/* Welcome Banner */}
       <Card className="border-none shadow-sm">
         <CardContent className="p-6">

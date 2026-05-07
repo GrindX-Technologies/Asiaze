@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Pencil, Eye, Trash2, Ban, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useToken } from "@/components/TokenProvider";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ import {
 export default function UsersListPage() {
   const [usersData, setUsersData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
@@ -33,6 +35,7 @@ export default function UsersListPage() {
 
   const [viewingUser, setViewingUser] = useState<any>(null);
   const [isViewUserModalOpen, setIsViewUserModalOpen] = useState(false);
+  const token = useToken();
 
   const toggleSelectAll = () => {
     if (selectedUsers.length === usersData.length) {
@@ -53,46 +56,41 @@ export default function UsersListPage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const getCookie = (name: string) => {
-          const value = `; ${document.cookie}`;
-          const parts = value.split(`; ${name}=`);
-          if (parts.length === 2) return parts.pop()?.split(';').shift();
-          return "";
-        };
-        const token = getCookie("token");
-        const res = await fetch("/api/users", {
+        setFetchError(null);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const res = await fetch(`${apiUrl}/api/users`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
           const data = await res.json();
-          // Extract the users array from the response
-          setUsersData(data.users || []);
+          setUsersData(Array.isArray(data) ? data : data.users || []);
         } else {
-          console.error("Failed to fetch users");
+          const errorData = await res.json().catch(() => ({}));
+          const message = errorData?.message || "Failed to fetch users";
+          setFetchError(message);
+          setUsersData([]);
+          console.error("Failed to fetch users:", message);
         }
       } catch (err) {
+        setFetchError("Network error while fetching users");
+        setUsersData([]);
         console.error(err);
       } finally {
         setIsLoading(false);
       }
     };
     fetchUsers();
-  }, []);
+  }, [token]);
 
   const handleAddUser = async () => {
     setError(null);
     try {
-      const getCookie = (name: string) => {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop()?.split(';').shift();
-        return "";
-      };
-      const res = await fetch("/api/users", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${apiUrl}/api/users`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          Authorization: `Bearer ${getCookie("token")}` 
+          Authorization: `Bearer ${token}` 
         },
         body: JSON.stringify({ name, email, phone, password, role: "user" })
       });
@@ -104,10 +102,10 @@ export default function UsersListPage() {
         setPhone("");
         setPassword("");
         const fetchUsers = async () => {
-          const res = await fetch("/api/users", { headers: { Authorization: `Bearer ${getCookie("token")}` } });
+          const res = await fetch(`${apiUrl}/api/users`, { headers: { Authorization: `Bearer ${token}` } });
           if (res.ok) {
             const data = await res.json();
-            setUsersData(data.users || []);
+            setUsersData(Array.isArray(data) ? data : data.users || []);
           }
         };
         fetchUsers();
@@ -124,21 +122,15 @@ export default function UsersListPage() {
     if (!editingUser) return;
     setError(null);
     try {
-      const getCookie = (name: string) => {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop()?.split(';').shift();
-        return "";
-      };
-      
       const payload: any = { name, email, phone };
       if (password) payload.password = password;
 
-      const res = await fetch(`/api/users/${editingUser._id}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${apiUrl}/api/users/${editingUser._id}`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",
-          Authorization: `Bearer ${getCookie("token")}` 
+          Authorization: `Bearer ${token}` 
         },
         body: JSON.stringify(payload)
       });
@@ -147,10 +139,10 @@ export default function UsersListPage() {
         setIsEditUserModalOpen(false);
         setEditingUser(null);
         const fetchUsers = async () => {
-          const res = await fetch("/api/users", { headers: { Authorization: `Bearer ${getCookie("token")}` } });
+          const res = await fetch(`${apiUrl}/api/users`, { headers: { Authorization: `Bearer ${token}` } });
           if (res.ok) {
             const data = await res.json();
-            setUsersData(data.users || []);
+            setUsersData(Array.isArray(data) ? data : data.users || []);
           }
         };
         fetchUsers();
@@ -180,6 +172,11 @@ export default function UsersListPage() {
 
   return (
     <div className="space-y-6">
+      {fetchError && (
+        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {fetchError}
+        </div>
+      )}
       {/* Header Actions */}
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-black tracking-tight">Manage Users</h2>

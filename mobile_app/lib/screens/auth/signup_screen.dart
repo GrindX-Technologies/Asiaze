@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../setup/preferences_screen.dart';
 import '../../services/api_service.dart';
+import '../../constants/states.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -14,19 +16,11 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailPhoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _referralController = TextEditingController();
   bool _obscurePassword = true;
   bool _isMobileMode = false;
   bool _isLoading = false;
   String? _selectedState;
-
-  final List<String> _indianStates = [
-    "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", 
-    "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", 
-    "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", 
-    "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", 
-    "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", 
-    "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
-  ];
 
   @override
   void initState() {
@@ -57,10 +51,11 @@ class _SignupScreenState extends State<SignupScreen> {
     final name = _fullNameController.text.trim();
     final email = _emailPhoneController.text.trim();
     final password = _passwordController.text;
+    final referralCode = _referralController.text.trim();
 
     if (name.isEmpty || email.isEmpty || password.isEmpty || _selectedState == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields and select a state')),
+        const SnackBar(content: Text('Please fill all required fields and select a state')),
       );
       return;
     }
@@ -70,7 +65,7 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      await ApiService.register(name, email, password, _selectedState!);
+      await ApiService.register(name, email, password, _selectedState!, referralCode: referralCode.isNotEmpty ? referralCode : null);
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
@@ -81,6 +76,46 @@ class _SignupScreenState extends State<SignupScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return; // The user canceled the sign-in
+      }
+
+      await ApiService.googleLogin(
+        googleUser.displayName ?? 'Google User',
+        googleUser.email,
+        googleUser.photoUrl ?? '',
+        googleUser.id,
+      );
+
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const PreferencesScreen()),
+        (route) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google Sign-In failed: $error')),
       );
     } finally {
       if (mounted) {
@@ -103,14 +138,10 @@ class _SignupScreenState extends State<SignupScreen> {
             children: [
               const SizedBox(height: 20),
               // Logo
-              Text(
-                'asiaze',
-                style: GoogleFonts.lexendDeca(
-                  fontSize: 48,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFFDC143C),
-                  letterSpacing: -1.5,
-                ),
+              Image.asset(
+                'assets/images/logo.png',
+                width: 200, // Explicit width for the horizontal text logo
+                fit: BoxFit.contain,
               ),
               const SizedBox(height: 50),
               // Full Name Field
@@ -155,7 +186,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     borderSide: const BorderSide(color: Color(0xFFDC143C)),
                   ),
                 ),
-                items: _indianStates.map((String state) {
+                items: IndianStates.list.map((String state) {
                   return DropdownMenuItem<String>(
                     value: state,
                     child: Text(
@@ -228,6 +259,27 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ),
                 ),
+              const SizedBox(height: 16),
+              // Referral Code Field
+              TextField(
+                controller: _referralController,
+                decoration: InputDecoration(
+                  hintText: 'Referral Code (Optional)',
+                  hintStyle: GoogleFonts.lexendDeca(
+                    color: const Color(0xFF94A3B8),
+                    fontSize: 14,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFDC143C)),
+                  ),
+                ),
+              ),
               if (!_isMobileMode) const SizedBox(height: 32),
               // Sign Up Button
               SizedBox(
@@ -284,7 +336,7 @@ class _SignupScreenState extends State<SignupScreen> {
               SizedBox(
                 width: 200,
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: _isLoading ? null : _handleGoogleSignIn,
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(

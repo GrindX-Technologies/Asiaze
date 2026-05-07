@@ -23,7 +23,8 @@ export function Topbar({ token }: { token?: string }) {
         
         if (!currentToken) return;
 
-        const res = await fetch("/api/auth/profile", {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const res = await fetch(`${apiUrl}/api/auth/profile`, {
           headers: { Authorization: `Bearer ${currentToken}` }
         });
         if (res.ok) {
@@ -52,7 +53,7 @@ export function Topbar({ token }: { token?: string }) {
       </div>
       <div className="flex items-center space-x-6 text-sm font-medium text-gray-900">
         <span>{adminName}</span>
-        <Link href="/dashboard/profile" className="hover:underline">Profile</Link>
+        <Link href="/dashboard/settings" className="hover:underline">Settings</Link>
       </div>
     </div>
   );

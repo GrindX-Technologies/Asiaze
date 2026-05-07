@@ -312,14 +312,10 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
-                Text(
-                  'asiaze',
-                  style: GoogleFonts.lexendDeca(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    letterSpacing: -1,
-                  ),
+                Image.asset(
+                  'assets/images/logo.png',
+                  width: 100, // Added explicit width to fit the horizontal logo gracefully
+                  fit: BoxFit.contain,
                 ),
                 IconButton(
                   icon: const Icon(Icons.volume_up, color: Colors.white),

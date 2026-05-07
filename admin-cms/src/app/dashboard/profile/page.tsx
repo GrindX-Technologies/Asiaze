@@ -1,9 +1,0 @@
-import { cookies } from "next/headers";
-import ProfileClient from "./ProfileClient";
-
-export default async function ProfilePage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value || "";
-
-  return <ProfileClient token={token} />;
-}

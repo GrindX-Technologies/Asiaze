@@ -1,45 +1,25 @@
+"use client";
+
+import { useActionState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import Image from "next/image";
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { loginAction } from "./actions";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  async function handleLogin(formData: FormData) {
-    "use server";
-    
-    const email = formData.get("email");
-    const password = formData.get("password");
+  const [state, formAction, isPending] = useActionState(loginAction, { error: null });
+  const router = useRouter();
 
-    try {
-      const apiUrl = process.env.NODE_ENV === "production" ? "http://127.0.0.1:5000/api/auth/login" : "http://localhost:5000/api/auth/login";
-      const res = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      
-      const data = await res.json();
-      
-      if (res.ok && data.token) {
-        const cookieStore = await cookies();
-        cookieStore.set("token", data.token, { 
-          path: "/", 
-          httpOnly: false,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax"
-        });
-        redirect("/dashboard");
-      } else {
-        console.error("Login failed:", data.message);
-        // You could handle UI error here by returning state
-      }
-    } catch (err) {
-      console.error("Login error:", err);
+  useEffect(() => {
+    const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+    if (token) {
+      router.push("/dashboard");
     }
-  }
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-between p-4">
@@ -61,8 +41,14 @@ export default function LoginPage() {
         </div>
 
         {/* Login Form */}
-        <form action={handleLogin} className="w-full space-y-6">
+        <form action={formAction} className="w-full space-y-6">
           <div className="space-y-4">
+            {state?.error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 text-center">
+                {state.error}
+              </div>
+            )}
+            
             <div className="space-y-2 text-center">
               <Label htmlFor="email" className="text-[#2B2B2B] text-base font-semibold">
                 Username
@@ -92,10 +78,16 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="text-center pt-2">
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center space-x-2 pl-2">
+              <Checkbox id="remember" name="remember" value="true" className="border-gray-300 data-[state=checked]:bg-[#E0202B] data-[state=checked]:border-[#E0202B]" />
+              <Label htmlFor="remember" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-[#4B4B4B]">
+                Remember me
+              </Label>
+            </div>
             <Link 
-              href="#" 
-              className="text-[#E0202B] text-sm font-semibold hover:underline"
+              href="/forgot-password" 
+              className="text-[#E0202B] text-sm font-semibold hover:underline pr-2"
             >
               Forgot Password?
             </Link>
@@ -104,9 +96,10 @@ export default function LoginPage() {
           <div className="pt-4 flex justify-center">
             <Button 
               type="submit" 
-              className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full w-48 h-12 text-base font-bold"
+              disabled={isPending}
+              className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full w-48 h-12 text-base font-bold disabled:opacity-50"
             >
-              Login
+              {isPending ? "Logging in..." : "Login"}
             </Button>
           </div>
         </form>

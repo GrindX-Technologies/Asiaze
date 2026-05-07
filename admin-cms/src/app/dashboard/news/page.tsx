@@ -11,10 +11,12 @@ import Link from "next/link";
 export default function AllNewsListPage() {
   const [newsData, setNewsData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
+        setFetchError(null);
         const getCookie = (name: string) => {
           const value = `; ${document.cookie}`;
           const parts = value.split(`; ${name}=`);
@@ -28,8 +30,15 @@ export default function AllNewsListPage() {
         if (res.ok) {
           const data = await res.json();
           setNewsData(data);
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          const message = errorData?.message || "Failed to fetch news";
+          setFetchError(message);
+          setNewsData([]);
         }
       } catch (err) {
+        setFetchError("Network error while fetching news");
+        setNewsData([]);
         console.error(err);
       } finally {
         setIsLoading(false);
@@ -40,6 +49,11 @@ export default function AllNewsListPage() {
 
   return (
     <div className="space-y-6">
+      {fetchError && (
+        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {fetchError}
+        </div>
+      )}
       {/* Header Actions */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <h2 className="text-2xl font-bold text-black tracking-tight">Manage News – All News</h2>

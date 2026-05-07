@@ -2,6 +2,71 @@ import { Request, Response } from 'express';
 import User from '../models/User';
 import { generateToken } from '../utils/generateToken';
 
+export const googleAuth = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, email, avatar, googleId } = req.body;
+
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // User exists, update avatar if empty and log in
+      if (!user.avatar && avatar) {
+        user.avatar = avatar;
+      }
+      
+      if (user.isBlocked) {
+        res.status(403).json({ message: 'User account is blocked' });
+        return;
+      }
+
+      user.loginHistory.push({
+        ip: req.ip || req.socket.remoteAddress || 'unknown',
+        device: req.headers['user-agent'] || 'unknown',
+        date: new Date(),
+      });
+      await user.save();
+
+      await user.populate('preferredCategories');
+      const categoriesList = (user.preferredCategories || []).map((c: any) => c.name);
+
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        state: user.state,
+        avatar: user.avatar,
+        preferredCategories: categoriesList,
+        token: generateToken(user._id as any),
+      });
+    } else {
+      // Create new user
+      const referralId = `REF${Math.floor(100000 + Math.random() * 900000)}`;
+
+      user = await User.create({
+        name,
+        email,
+        avatar,
+        referralId,
+        role: 'user',
+        // password is not required for social login
+      });
+
+      res.status(201).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        referralId: user.referralId,
+        token: generateToken(user._id as any),
+      });
+    }
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Auth user & get token
 // @route   POST /api/auth/login
 // @access  Public
@@ -16,6 +81,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         res.status(403).json({ message: 'User account is blocked' });
         return;
       }
+
+      await user.populate('preferredCategories');
+      const categoriesList = (user.preferredCategories || []).map((c: any) => c.name);
 
       // Optional: Log login history
       user.loginHistory.push({
@@ -62,8 +130,20 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       const referrer = await User.findOne({ referralId: referredByCode });
       if (referrer) {
         referredByUserId = referrer._id;
-        // Optionally add points to referrer here
-        referrer.points += 10; // example points
+        
+        // Fetch dynamic pointsPerReferral setting
+        let pointsToAdd = 10; // fallback
+        try {
+          const { default: Setting } = await import('../models/Setting');
+          const setting = await Setting.findOne({ key: 'pointsPerReferral' });
+          if (setting && setting.value) {
+            pointsToAdd = Number(setting.value);
+          }
+        } catch (err) {
+          console.error('Error fetching pointsPerReferral setting:', err);
+        }
+
+        referrer.points += pointsToAdd;
         await referrer.save();
       }
     }
@@ -110,17 +190,43 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
       user.name = req.body.name || user.name;
       user.email = req.body.email || user.email;
       
+      if (req.body.avatar !== undefined) {
+        user.avatar = req.body.avatar;
+      }
+      if (req.body.phone !== undefined) {
+        user.phone = req.body.phone;
+      }
+      if (req.body.state !== undefined) {
+        user.state = req.body.state;
+      }
+      
+      if (req.body.preferredCategories !== undefined && Array.isArray(req.body.preferredCategories)) {
+        try {
+          const { default: Category } = await import('../models/Category');
+          const categories = await Category.find({ name: { $in: req.body.preferredCategories } });
+          user.preferredCategories = categories.map(c => c._id as any);
+        } catch (err) {
+          console.error('Error finding categories:', err);
+        }
+      }
+      
       if (req.body.password) {
         user.password = req.body.password;
       }
 
       const updatedUser = await user.save();
+      await updatedUser.populate('preferredCategories');
+      const categoriesList = (updatedUser.preferredCategories || []).map((c: any) => c.name);
 
       res.json({
         _id: updatedUser._id,
         name: updatedUser.name,
         email: updatedUser.email,
+        avatar: updatedUser.avatar,
+        phone: updatedUser.phone,
+        state: updatedUser.state,
         role: updatedUser.role,
+        preferredCategories: categoriesList,
         token: generateToken(updatedUser._id as any),
       });
     } else {
@@ -130,18 +236,43 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({ message: error.message });
   }
 };
+// @desc    Get user profile
 // @route   GET /api/auth/profile
 // @access  Private
 export const getProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     // req.user will be populated by authMiddleware
-    const user = await User.findById((req as any).user._id).select('-password');
+    const user = await User.findById((req as any).user._id).select('-password').populate('preferredCategories');
     
     if (user) {
-      res.json(user);
+      const userData = user.toObject();
+      userData.preferredCategories = (user.preferredCategories || []).map((c: any) => c.name);
+      res.json(userData);
     } else {
       res.status(404).json({ message: 'User not found' });
     }
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Forgot password
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      // Return 200 to prevent email enumeration
+      res.json({ message: 'If that email address is in our database, we will send you an email to reset your password.' });
+      return;
+    }
+
+    // In a real application, you would generate a reset token and send an email here.
+    // For now, we'll mock the success response.
+    res.json({ message: 'If that email address is in our database, we will send you an email to reset your password.' });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

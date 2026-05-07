@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'signup_screen.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../home/home_screen.dart';
+import 'signup_screen.dart';
 import '../../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -80,6 +81,45 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      await ApiService.googleLogin(
+        googleUser.displayName ?? 'Google User',
+        googleUser.email,
+        googleUser.photoUrl ?? '',
+        googleUser.id,
+      );
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google Sign-In failed: $error')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,14 +132,10 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const SizedBox(height: 40),
               // Logo
-              Text(
-                'asiaze',
-                style: GoogleFonts.lexendDeca(
-                  fontSize: 48,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFFDC143C),
-                  letterSpacing: -1.5,
-                ),
+              Image.asset(
+                'assets/images/logo.png',
+                width: 200, // Explicit width for the horizontal text logo
+                fit: BoxFit.contain,
               ),
               const SizedBox(height: 60),
               // Email / Phone Field
@@ -201,7 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 width: 200,
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: _isLoading ? null : _handleGoogleSignIn,
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(

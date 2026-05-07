@@ -9,6 +9,7 @@ export interface IUser extends Document {
   avatar?: string;
   phone?: string;
   state?: string;
+  preferredCategories?: mongoose.Types.ObjectId[];
   referralId: string;
   referredBy?: mongoose.Types.ObjectId;
   points: number;
@@ -33,6 +34,7 @@ const userSchema = new Schema(
     avatar: { type: String },
     phone: { type: String },
     state: { type: String },
+    preferredCategories: [{ type: Schema.Types.ObjectId, ref: 'Category' }],
     referralId: { type: String, unique: true, required: true },
     referredBy: { type: Schema.Types.ObjectId, ref: 'User' },
     points: { type: Number, default: 0 },

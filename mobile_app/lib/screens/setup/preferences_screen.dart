@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/translation_service.dart';
+import '../../services/api_service.dart';
 
 import '../home/home_screen.dart';
 
 class PreferencesScreen extends StatefulWidget {
-  const PreferencesScreen({super.key});
+  final bool isFromSettings;
+  const PreferencesScreen({super.key, this.isFromSettings = false});
 
   @override
   State<PreferencesScreen> createState() => _PreferencesScreenState();
@@ -14,9 +16,9 @@ class PreferencesScreen extends StatefulWidget {
 
 class _PreferencesScreenState extends State<PreferencesScreen> {
   String _selectedLanguage = 'HIN'; // Default to match design
-  final Set<String> _selectedCategories = {'Politics', 'Entertainment'};
+  Set<String> _selectedCategories = {'Politics', 'Entertainment'};
 
-  final List<String> _baseCategories = [
+  List<String> _baseCategories = [
     'Politics', 'Sports', 'Business', 'Tech', 
     'Lifestyle', 'Finance', 'Health', 'Entertainment'
   ];
@@ -31,6 +33,36 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   @override
   void initState() {
     super.initState();
+    _buttonText = widget.isFromSettings ? 'Save Preferences' : 'Continue';
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Load previously selected language
+    final savedLang = prefs.getString('selectedLanguage');
+    if (savedLang != null) {
+      _selectedLanguage = savedLang;
+    }
+
+    // Load previously selected categories
+    final savedCategories = prefs.getStringList('selectedCategories');
+    if (savedCategories != null && savedCategories.isNotEmpty) {
+      _selectedCategories = savedCategories.toSet();
+    }
+
+    // Fetch dynamic categories from API
+    try {
+      final categories = await ApiService.getCategories();
+      if (categories.isNotEmpty) {
+        _baseCategories = categories.map<String>((c) => c['name'] as String).toList();
+      }
+    } catch (e) {
+      // Fallback to defaults if API fails
+      debugPrint('Failed to load dynamic categories: $e');
+    }
+
     _displayCategories = List.from(_baseCategories);
     _applyTranslation(_selectedLanguage);
   }
@@ -75,11 +107,27 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   Future<void> _handleContinue() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('selectedLanguage', _selectedLanguage);
+    
+    // Save selected categories locally
+    await prefs.setStringList('selectedCategories', _selectedCategories.toList());
+
+    // Save to backend
+    try {
+      await ApiService.updateProfile({'preferredCategories': _selectedCategories.toList()});
+    } catch (e) {
+      debugPrint('Failed to sync categories to backend: $e');
+    }
+
     if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-    );
+
+    if (widget.isFromSettings) {
+      Navigator.pop(context);
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
   }
 
   @override
@@ -89,7 +137,13 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        automaticallyImplyLeading: false, // No back button
+        automaticallyImplyLeading: widget.isFromSettings, // Back button if from settings
+        leading: widget.isFromSettings
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -97,27 +151,29 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                _titleText,
-                style: GoogleFonts.lexendDeca(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black,
+              if (!widget.isFromSettings) ...[
+                Text(
+                  _titleText,
+                  style: GoogleFonts.lexendDeca(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              // Language Chips
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildLanguageChip('EN'),
-                  const SizedBox(width: 16),
-                  _buildLanguageChip('HIN'),
-                  const SizedBox(width: 16),
-                  _buildLanguageChip('BEN'),
-                ],
-              ),
-              const SizedBox(height: 40),
+                const SizedBox(height: 24),
+                // Language Chips
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildLanguageChip('EN'),
+                    const SizedBox(width: 16),
+                    _buildLanguageChip('HIN'),
+                    const SizedBox(width: 16),
+                    _buildLanguageChip('BEN'),
+                  ],
+                ),
+                const SizedBox(height: 40),
+              ],
               Text(
                 _subtitleText,
                 style: GoogleFonts.roboto(

@@ -10,9 +10,18 @@ export const getCoupons = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
+export const getActiveCoupons = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const coupons = await Coupon.find({ isActive: true }).sort({ createdAt: -1 });
+    res.json(coupons);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const createCoupon = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { code, appLink, requiredPoints, isActive } = req.body;
+    const { code, title, appLink, imageUrl, requiredPoints, isActive } = req.body;
     const couponExists = await Coupon.findOne({ code });
 
     if (couponExists) {
@@ -22,7 +31,9 @@ export const createCoupon = async (req: Request, res: Response): Promise<void> =
 
     const coupon = new Coupon({
       code,
+      title: title || 'Reward',
       appLink,
+      imageUrl,
       requiredPoints,
       isActive,
       createdBy: (req as any).user._id
@@ -41,7 +52,9 @@ export const updateCoupon = async (req: Request, res: Response): Promise<void> =
 
     if (coupon) {
       coupon.code = req.body.code || coupon.code;
+      coupon.title = req.body.title || coupon.title;
       coupon.appLink = req.body.appLink || coupon.appLink;
+      coupon.imageUrl = req.body.imageUrl !== undefined ? req.body.imageUrl : coupon.imageUrl;
       coupon.requiredPoints = req.body.requiredPoints !== undefined ? req.body.requiredPoints : coupon.requiredPoints;
       coupon.isActive = req.body.isActive !== undefined ? req.body.isActive : coupon.isActive;
 

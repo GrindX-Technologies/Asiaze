@@ -19,6 +19,13 @@ export default function EditStoryPage() {
   const [pages, setPages] = useState([{ title: "", description: "", imageFile: null as File | null, imagePreview: "" }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const getCookie = (name: string) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift();
+    return "";
+  };
+
   useEffect(() => {
     if (storyId) {
       const token = getCookie("token");
@@ -41,13 +48,6 @@ export default function EditStoryPage() {
       .catch(err => console.error("Failed to load story", err));
     }
   }, [storyId]);
-
-  const getCookie = (name: string) => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop()?.split(';').shift();
-    return "";
-  };
 
   const uploadFile = async (file: File) => {
     const formData = new FormData();

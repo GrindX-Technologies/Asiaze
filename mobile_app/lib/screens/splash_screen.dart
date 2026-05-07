@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'onboarding_screen.dart';
 import 'home/home_screen.dart';
 import '../services/api_service.dart';
@@ -46,24 +45,10 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'asiaze',
-              style: GoogleFonts.lexendDeca(
-                fontSize: 54,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                letterSpacing: -1.5,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Your World, Simplified',
-              style: GoogleFonts.lexendDeca(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Colors.white,
-                letterSpacing: 0,
-              ),
+            Image.asset(
+              'assets/images/logo.png',
+              width: 250, // Increased size to match the horizontal logo proportions
+              fit: BoxFit.contain,
             ),
           ],
         ),
