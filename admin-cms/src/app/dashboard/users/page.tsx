@@ -65,7 +65,10 @@ export default function UsersListPage() {
         });
         if (res.ok) {
           const data = await res.json();
-          setUsersData(data);
+          // Extract the users array from the response
+          setUsersData(data.users || []);
+        } else {
+          console.error("Failed to fetch users");
         }
       } catch (err) {
         console.error(err);
@@ -102,7 +105,10 @@ export default function UsersListPage() {
         setPassword("");
         const fetchUsers = async () => {
           const res = await fetch("/api/users", { headers: { Authorization: `Bearer ${getCookie("token")}` } });
-          if (res.ok) setUsersData(await res.json());
+          if (res.ok) {
+            const data = await res.json();
+            setUsersData(data.users || []);
+          }
         };
         fetchUsers();
       } else {
@@ -142,7 +148,10 @@ export default function UsersListPage() {
         setEditingUser(null);
         const fetchUsers = async () => {
           const res = await fetch("/api/users", { headers: { Authorization: `Bearer ${getCookie("token")}` } });
-          if (res.ok) setUsersData(await res.json());
+          if (res.ok) {
+            const data = await res.json();
+            setUsersData(data.users || []);
+          }
         };
         fetchUsers();
       } else {
