@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'onboarding_screen.dart';
+import 'home/home_screen.dart';
+import '../services/api_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,11 +23,19 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
     
-    // Replace with onboarding screen
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-    );
+    final token = await ApiService.getToken();
+
+    if (token != null && token.isNotEmpty) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+      );
+    }
   }
 
   @override
