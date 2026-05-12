@@ -18,10 +18,16 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentNavIndex = 1; // 1 = Home (based on PRD/Figma)
   bool _isLoading = true;
+  bool _isRefreshing = false;
+
+  late final AnimationController _spinController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat();
 
   List<String> _tabs = [
     'My Feed',
@@ -52,6 +58,13 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _initData();
+  }
+
+  @override
+  void dispose() {
+    _spinController.dispose();
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _initData() async {
@@ -274,69 +287,74 @@ class _HomeScreenState extends State<HomeScreen> {
             // Vertical Swipeable Feed
             Expanded(
               child: Stack(
+                alignment: Alignment.topCenter,
                 children: [
                   RefreshIndicator(
                     color: const Color(0xFFDC143C),
                     backgroundColor: Colors.white,
+                    displacement: 64,
                     onRefresh: () async {
-                      // Actually fetch new data on swipe down
-                      await _fetchFeed();
-                      _pageController.animateToPage(
-                        0,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    },
-                    child: _buildFeed(),
-                  ),
-                  // "Load New Feed" Pill (Simulated as positioned overlay like in second image)
-                  if (_feedData.isNotEmpty) Positioned(
-                    top: 16,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: GestureDetector(
-                        onTap: () {
-                          // Refresh logic
-                          _fetchFeed();
+                      setState(() => _isRefreshing = true);
+                      try {
+                        // Actually fetch new data on swipe down
+                        await _fetchFeed();
+                        if (mounted) {
                           _pageController.animateToPage(
                             0,
                             duration: const Duration(milliseconds: 300),
                             curve: Curves.easeInOut,
                           );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF333333),
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withAlpha(26),
-                                blurRadius: 6,
-                                offset: const Offset(0, 4),
-                              )
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.refresh, color: Colors.white, size: 18),
-                              const SizedBox(width: 8),
-                              Text(
-                                _tLoadNewFeed,
-                                style: GoogleFonts.roboto(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() => _isRefreshing = false);
+                        }
+                      }
+                    },
+                    child: _buildFeed(),
+                  ),
+                  // "Load New Feed" Pill (Shows only during pull-to-refresh)
+                  if (_isRefreshing && _feedData.isNotEmpty)
+                    SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF333333),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(26),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 4),
+                                )
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                RotationTransition(
+                                  turns: _spinController,
+                                  child: const Icon(Icons.refresh, color: Colors.white, size: 18),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 8),
+                                Text(
+                                  _tLoadNewFeed,
+                                  style: GoogleFonts.roboto(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
