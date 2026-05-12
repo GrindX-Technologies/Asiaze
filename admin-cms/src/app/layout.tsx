@@ -13,6 +13,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://asiaze.cloud'),
   title: "Asiaze Admin Panel",
   description: "Admin Panel for Asiaze",
 };
