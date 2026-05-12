@@ -76,11 +76,31 @@ export default function EditStoryPage() {
   const handleImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      // Validate file type (jpg/png only)
+      if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+        alert("Only JPG and PNG images are supported for stories.");
+        return;
+      }
+      
+      // Validate file size (<= 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size must be less than or equal to 5MB.");
+        return;
+      }
+
       const newPages = [...pages];
       newPages[index].imageFile = file;
       newPages[index].imagePreview = URL.createObjectURL(file);
       setPages(newPages);
     }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    const newPages = [...pages];
+    newPages[index].imageFile = null;
+    newPages[index].imagePreview = "";
+    setPages(newPages);
   };
 
   const addPage = () => {
@@ -218,21 +238,37 @@ export default function EditStoryPage() {
                   {/* Page Image */}
                   <div className="space-y-2">
                     <Label className="text-black font-bold">Background Image (9:16)</Label>
-                    <div className="relative">
+                    <div className="relative" onClick={() => document.getElementById(`file-${index}`)?.click()}>
                       <input 
+                        id={`file-${index}`}
                         type="file" 
-                        accept="image/*" 
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                        accept="image/jpeg, image/jpg, image/png" 
+                        className="hidden" 
                         onChange={(e) => handleImageChange(index, e)}
                         required={!page.imagePreview}
                       />
-                      <div className="border-2 border-dashed border-gray-300 rounded-xl bg-white flex flex-col items-center justify-center h-[300px] hover:bg-gray-50 transition-colors overflow-hidden w-[168px]">
+                      <div className="border-2 border-dashed border-gray-300 rounded-xl bg-white flex flex-col items-center justify-center h-[300px] hover:bg-gray-50 transition-colors overflow-hidden w-[168px] relative group">
                         {page.imagePreview ? (
-                          <Image src={page.imagePreview} alt={`Page ${index + 1}`} fill className="object-cover" />
+                          <>
+                            <Image src={page.imagePreview} alt={`Page ${index + 1}`} fill className="object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <button 
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveImage(index);
+                                }}
+                                className="bg-red-500 text-white px-3 py-1 rounded text-sm font-bold shadow-md hover:bg-red-600"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </>
                         ) : (
                           <>
                             <Upload className="w-8 h-8 text-gray-400 mb-2" />
                             <p className="text-gray-500 font-medium text-xs text-center px-2">Upload Image</p>
+                            <p className="text-gray-400 text-[10px] text-center mt-1 px-2">JPG/PNG ≤ 5MB</p>
                           </>
                         )}
                       </div>
