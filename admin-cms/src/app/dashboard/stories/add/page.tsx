@@ -193,9 +193,6 @@ export default function AddStoryPage() {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-bold">Web Story Pages</h3>
-            <Button type="button" onClick={addPage} variant="outline" className="flex items-center gap-2">
-              <Plus size={16} /> Add Page
-            </Button>
           </div>
 
           <div className="space-y-8">
@@ -266,6 +263,17 @@ export default function AddStoryPage() {
                 </div>
               </div>
             ))}
+
+            {/* Add New Page Card */}
+            <div 
+              onClick={addPage}
+              className="p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors h-32"
+            >
+              <div className="flex flex-col items-center justify-center text-gray-500">
+                <Plus size={32} className="mb-2 text-gray-400" />
+                <span className="font-bold text-gray-600">Add New Page</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
