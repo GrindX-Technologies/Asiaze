@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../home/reels_screen.dart';
 import '../../services/saved_reels_service.dart';
 
 class SavedReelsScreen extends StatefulWidget {
@@ -99,10 +100,12 @@ class _SavedReelsScreenState extends State<SavedReelsScreen> {
                     final reel = _savedReels[index];
                     return GestureDetector(
                       onTap: () {
-                        // Normally you might navigate to a ReelPlayer with just this reel or feed
-                        // For now, we can show a quick preview or navigate
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Playing: ${reel['title']}')),
+                        // Navigate directly to the ReelsScreen with this specific reel at the top
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ReelsScreen(initialReelId: reel['id']),
+                          ),
                         );
                       },
                       child: Container(

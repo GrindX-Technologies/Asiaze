@@ -10,7 +10,8 @@ import '../../services/translation_service.dart';
 import '../../services/saved_reels_service.dart';
 
 class ReelsScreen extends StatefulWidget {
-  const ReelsScreen({super.key});
+  final String? initialReelId;
+  const ReelsScreen({super.key, this.initialReelId});
 
   @override
   State<ReelsScreen> createState() => _ReelsScreenState();
@@ -84,6 +85,14 @@ class _ReelsScreenState extends State<ReelsScreen> {
       
       if (!mounted) return;
       setState(() {
+        if (widget.initialReelId != null) {
+          // Reorder so the requested reel is first
+          final initialReelIndex = mappedData.indexWhere((r) => r['id'] == widget.initialReelId);
+          if (initialReelIndex != -1) {
+            final initialReel = mappedData.removeAt(initialReelIndex);
+            mappedData.insert(0, initialReel);
+          }
+        }
         _reelsData = mappedData;
       });
     } catch (e) {
