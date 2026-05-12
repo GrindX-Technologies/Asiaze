@@ -1,18 +1,20 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 
 export default function AddStoryPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("General");
+  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState<any[]>([]);
   const [pages, setPages] = useState([{ title: "", description: "", imageFile: null as File | null, imagePreview: "" }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -23,11 +25,29 @@ export default function AddStoryPage() {
     return "";
   };
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const token = getCookie("token");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/categories`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCategories(data.filter((c: any) => c.status === 'active' || c.status === 'Active'));
+        }
+      } catch (err) {
+        console.error("Failed to fetch categories", err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
   const uploadFile = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch("/api/upload", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/upload`, {
       method: "POST",
       body: formData,
     });
@@ -91,7 +111,7 @@ export default function AddStoryPage() {
       }));
 
       const token = getCookie("token");
-      const res = await fetch("/api/stories", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/stories`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -144,13 +164,18 @@ export default function AddStoryPage() {
             </div>
             <div className="space-y-2">
               <Label className="text-black font-bold text-base">Category</Label>
-              <Input 
-                placeholder="e.g. Tech, Business" 
-                className="bg-white border-gray-200 h-12"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                required
-              />
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="bg-white border-gray-200 h-12 text-gray-900">
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.length > 0 ? categories.map((cat: any) => (
+                    <SelectItem key={cat._id || cat.slug} value={cat.slug || cat.name.toLowerCase()}>{cat.name}</SelectItem>
+                  )) : (
+                    <SelectItem value="general">General</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
@@ -179,53 +204,55 @@ export default function AddStoryPage() {
                 
                 <h4 className="font-bold mb-4">Page {index + 1}</h4>
                 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Page Image */}
-                  <div className="space-y-2">
-                    <Label className="text-black font-bold">Background Image (9:16)</Label>
-                    <div className="relative">
+                <div className="flex flex-col lg:flex-row gap-8">
+                  {/* Left Column: Image Upload */}
+                  <div className="w-full lg:w-[225px] shrink-0 space-y-2">
+                    <Label className="text-gray-500 font-medium text-sm">Background Image (9:16)</Label>
+                    <div 
+                      onClick={() => document.getElementById(`file-${index}`)?.click()}
+                      className="w-full h-[400px] border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-gray-100 transition-colors relative shadow-sm"
+                    >
                       <input 
+                        id={`file-${index}`}
                         type="file" 
                         accept="image/*" 
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                        className="hidden" 
                         onChange={(e) => handleImageChange(index, e)}
-                        required={!page.imagePreview}
                       />
-                      <div className="border-2 border-dashed border-gray-300 rounded-xl bg-white flex flex-col items-center justify-center h-[300px] hover:bg-gray-50 transition-colors overflow-hidden w-[168px]">
-                        {page.imagePreview ? (
-                          <Image src={page.imagePreview} alt={`Page ${index + 1}`} fill className="object-cover" />
-                        ) : (
-                          <>
-                            <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                            <p className="text-gray-500 font-medium text-xs text-center px-2">Upload Image</p>
-                          </>
-                        )}
-                      </div>
+                      {page.imagePreview ? (
+                        <img src={page.imagePreview} alt={`Page ${index + 1} preview`} className="w-full h-full object-cover absolute inset-0" />
+                      ) : (
+                        <div className="text-center p-4">
+                          <Upload className="w-8 h-8 text-[#E0202B] mx-auto mb-2" />
+                          <p className="text-gray-500 text-sm font-medium">Upload Image</p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Page Text */}
-                  <div className="space-y-6">
+                  {/* Right Column: Title and Description */}
+                  <div className="flex-1 space-y-6">
                     <div className="space-y-2">
-                      <Label className="text-black font-bold">Page Title / Headline</Label>
-                      <Input 
-                        placeholder="Page Headline" 
-                        className="bg-white border-gray-200"
-                        value={page.title}
-                        onChange={(e) => handlePageChange(index, "title", e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-black font-bold">Page Description</Label>
-                      <Textarea 
-                        placeholder="Write the description text for this page..." 
-                        className="bg-white border-gray-200 min-h-[150px] resize-y"
-                        value={page.description}
-                        onChange={(e) => handlePageChange(index, "description", e.target.value)}
-                        required
-                      />
-                    </div>
+                        <Label className="text-black font-bold">Page Title / Headline</Label>
+                        <Input 
+                          placeholder="Page Headline" 
+                          className="bg-white border-gray-200 h-12"
+                          value={page.title}
+                          onChange={(e) => handlePageChange(index, "title", e.target.value)}
+                          required
+                        />
+                      </div>
+  
+                      <div className="space-y-2 flex-1 flex flex-col">
+                        <Label className="text-black font-bold">Page Description</Label>
+                        <Textarea 
+                          placeholder="Write the description text for this page..." 
+                          className="bg-white border-gray-200 flex-1 min-h-[160px] resize-none"
+                          value={page.description}
+                          onChange={(e) => handlePageChange(index, "description", e.target.value)}
+                          required
+                        />
+                      </div>
                   </div>
                 </div>
               </div>

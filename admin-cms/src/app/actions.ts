@@ -31,13 +31,15 @@ export async function loginAction(prevState: any, formData: FormData): Promise<{
       const cookieOptions: any = {
         path: "/", 
         httpOnly: false,
-        secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
+        domain: ".asiaze.cloud",
       };
 
-      // If "Remember Me" is checked, keep cookie for 30 days. Otherwise, it's a session cookie.
+      // If "Remember Me" is checked, keep cookie for 30 days. Otherwise, default 24h to prevent random drops.
       if (remember) {
-        cookieOptions.maxAge = 60 * 60 * 24 * 30;
+        cookieOptions.maxAge = 60 * 60 * 24 * 30; // 30 days
+      } else {
+        cookieOptions.maxAge = 60 * 60 * 24; // 24 hours
       }
 
       cookieStore.set("token", data.token, cookieOptions);

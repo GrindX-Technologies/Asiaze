@@ -67,7 +67,7 @@ export default function SettingsPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.token) {
-          document.cookie = `token=${data.token}; path=/; max-age=2592000; SameSite=Lax`;
+          document.cookie = `token=${data.token}; path=/; max-age=2592000; SameSite=Lax; domain=.asiaze.cloud`;
         }
         setMessage({ text: "Profile updated successfully.", type: "success" });
         setPassword("");

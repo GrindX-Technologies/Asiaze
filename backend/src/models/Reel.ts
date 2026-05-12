@@ -5,6 +5,7 @@ export interface IReel extends Document {
   description?: string;
   videoUrl: string;
   thumbnailUrl?: string;
+  articleLink?: string;
   uploader: mongoose.Types.ObjectId;
   status: 'active' | 'inactive';
   views: number;
@@ -20,6 +21,7 @@ const reelSchema = new Schema(
     description: { type: String },
     videoUrl: { type: String, required: true },
     thumbnailUrl: { type: String },
+    articleLink: { type: String },
     uploader: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
     views: { type: Number, default: 0 },

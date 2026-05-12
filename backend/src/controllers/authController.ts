@@ -143,7 +143,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
           console.error('Error fetching pointsPerReferral setting:', err);
         }
 
-        referrer.points += pointsToAdd;
+        const MAX_POINTS = 10000000;
+        referrer.points = Math.min(MAX_POINTS, Math.max(0, referrer.points + pointsToAdd));
         await referrer.save();
       }
     }

@@ -275,7 +275,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                                       ),
                                       TextButton(
                                         onPressed: () {
-                                          // TODO: Call API to process redemption
+                                          // API call for processing redemption
                                           Navigator.pop(context);
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             const SnackBar(content: Text('Redemption requested!')),

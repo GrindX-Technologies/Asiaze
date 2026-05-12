@@ -195,7 +195,7 @@ class ApiService {
 
   static Future<List<dynamic>> getCategories() async {
     final response = await http.get(
-      Uri.parse('$baseUrl/categories'),
+      Uri.parse('$baseUrl/categories?status=active'),
       headers: {'Content-Type': 'application/json'},
     );
     if (response.statusCode == 200) {
@@ -242,6 +242,22 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to load news');
+    }
+  }
+
+  static Future<List<dynamic>> getBreakingNews() async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/news?status=published&isBreaking=true'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token'
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load breaking news');
     }
   }
 

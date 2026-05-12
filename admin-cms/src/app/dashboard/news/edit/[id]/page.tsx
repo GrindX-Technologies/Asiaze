@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useToken } from "@/components/TokenProvider";
+import { Loader2 } from "lucide-react";
 
 const INDIAN_STATES = [
   "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", 
@@ -22,58 +24,275 @@ const INDIAN_STATES = [
 
 export default function EditNewsPage() {
   const params = useParams();
-  const [states, setStates] = useState<string[]>(["West Bengal", "Delhi"]); // Simulated existing states
+  const id = params.id as string;
+  const router = useRouter();
+  const token = useToken();
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   
+  const [categories, setCategories] = useState<any[]>([]);
+  const [tagsList, setTagsList] = useState<any[]>([]);
+  
+  const [title, setTitle] = useState("");
+  const [summary, setSummary] = useState("");
+  const [content, setContent] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [source, setSource] = useState("");
+  const [language, setLanguage] = useState("en");
+  const [categoryId, setCategoryId] = useState("");
+  const [status, setStatus] = useState("draft");
+  const [states, setStates] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [tagsInput, setTagsInput] = useState("");
+  
+  const [currentImage, setCurrentImage] = useState("");
+  const [newImage, setNewImage] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchData = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        
+        const [newsRes, catsRes, tagsRes] = await Promise.all([
+          fetch(`${apiUrl}/api/news`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${apiUrl}/api/categories`, { headers: { Authorization: `Bearer ${token}` } }),
+          // Assuming a tags endpoint exists or we can mock it
+          fetch(`${apiUrl}/api/tags`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ ok: false, json: () => [] }))
+        ]);
+
+        if (newsRes.ok) {
+          const data = await newsRes.json();
+          const item = data.find((n: any) => n._id === id);
+          if (item) {
+            setTitle(item.title || "");
+            setSummary(item.summary || "");
+            setContent(item.content || "");
+            setSourceUrl(item.sourceUrl || "");
+            setSource(item.source || "");
+            setLanguage(item.language || "en");
+            setCategoryId(item.category?._id || item.category || "");
+            setStatus(item.status || "draft");
+            setStates(item.states || []);
+            setCurrentImage(item.coverImage || "");
+            setSelectedTags(item.tags?.map((t: any) => t._id || t) || []);
+          } else {
+            setFetchError("News article not found.");
+          }
+        } else {
+          setFetchError("Failed to fetch news.");
+        }
+
+        if (catsRes.ok) {
+          setCategories(await catsRes.json());
+        }
+        
+        if ('ok' in tagsRes && (tagsRes as any).ok) {
+           setTagsList(await (tagsRes as any).json());
+        }
+
+      } catch (err) {
+        setFetchError("Network error while loading data.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id, token]);
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title) {
+      setSaveError("Headline is required.");
+      return;
+    }
+    
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      let finalImageUrl = currentImage;
+
+      // Process new tags from input
+      let finalTags = [...selectedTags];
+      if (tagsInput.trim()) {
+        const newTagNames = tagsInput.split(',').map(t => t.trim()).filter(t => t);
+        for (const tagName of newTagNames) {
+          const existing = tagsList.find(t => t.name.toLowerCase() === tagName.toLowerCase());
+          if (existing) {
+            if (!finalTags.includes(existing._id)) {
+              finalTags.push(existing._id);
+            }
+          } else {
+            // Create new tag
+            const slug = tagName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+            const tagRes = await fetch(`${apiUrl}/api/tags`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+              body: JSON.stringify({ name: tagName, slug, status: 'active' })
+            });
+            if (tagRes.ok) {
+              const newTag = await tagRes.json();
+              finalTags.push(newTag._id);
+            }
+          }
+        }
+      }
+
+      // If a new image was selected, upload it first
+      if (newImage) {
+        const formData = new FormData();
+        formData.append("file", newImage);
+        const uploadRes = await fetch(`${apiUrl}/api/upload`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData
+        });
+
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          finalImageUrl = uploadData.url;
+        } else {
+          const err = await uploadRes.json().catch(() => ({ message: "Failed to upload image" }));
+          setSaveError(err.message || "Failed to upload image");
+          setIsSaving(false);
+          return;
+        }
+      }
+
+      const updatePayload = {
+        title,
+        summary,
+        content,
+        sourceUrl,
+        source,
+        language,
+        category: categoryId,
+        status,
+        states,
+        tags: finalTags,
+        coverImage: finalImageUrl
+      };
+
+      const res = await fetch(`${apiUrl}/api/news/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(updatePayload)
+      });
+
+      if (res.ok) {
+        router.push("/dashboard/news");
+      } else {
+        const err = await res.json();
+        setSaveError(err.message || "Failed to update news.");
+      }
+    } catch (err) {
+      setSaveError("Network error. Could not save changes.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-[#E0202B]" />
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="p-8 text-center text-red-600 bg-red-50 rounded-xl border border-red-200">
+        {fetchError}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-black tracking-tight">Edit News</h2>
       
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-8">
+      {saveError && (
+        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {saveError}
+        </div>
+      )}
+
+      <form onSubmit={handleUpdate} className="bg-white rounded-lg shadow-sm border border-gray-100 p-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left Column */}
           <div className="space-y-6">
             <div className="space-y-2">
-              <Label className="text-black font-bold">Headline</Label>
+              <Label className="text-black font-bold">Headline *</Label>
               <Input 
-                defaultValue="Pre-filled Headline" 
-                className="bg-white border-gray-200 text-gray-500"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter headline" 
+                className="bg-white border-gray-200 text-black"
+                maxLength={250}
+                required
               />
             </div>
             
             <div className="space-y-2">
               <Label className="text-black font-bold">Summary <span className="font-normal text-gray-400 text-sm">(60 words max)</span></Label>
               <Textarea 
-                defaultValue="Pre-filled summary text with word counter visible." 
-                className="bg-white border-gray-200 resize-none h-32 text-gray-500"
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                placeholder="Enter summary text" 
+                className="bg-white border-gray-200 resize-none h-32 text-black"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-black font-bold">Full Article Content</Label>
+              <Textarea 
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Enter full article content" 
+                className="bg-white border-gray-200 resize-none h-48 text-black"
               />
             </div>
             
             <div className="space-y-2">
               <Label className="text-black font-bold">Full Article Link</Label>
               <Input 
-                defaultValue="https://existing-article-link.com" 
-                className="bg-white border-gray-200 text-gray-500"
+                value={sourceUrl}
+                onChange={(e) => setSourceUrl(e.target.value)}
+                placeholder="https://..." 
+                className="bg-white border-gray-200 text-black"
               />
             </div>
             
             <div className="space-y-2">
               <Label className="text-black font-bold">Category</Label>
-              <Select defaultValue="politics">
-                <SelectTrigger className="bg-white border-gray-200 text-gray-500">
+              <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger className="bg-white border-gray-200 text-black">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="politics">Politics</SelectItem>
-                  <SelectItem value="entertainment">Entertainment</SelectItem>
-                  <SelectItem value="finance">Finance</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat._id} value={cat._id}>{cat.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
               <Label className="text-black font-bold">Language</Label>
-              <Select defaultValue="en">
-                <SelectTrigger className="bg-white border-gray-200 text-gray-500">
+              <Select value={language} onValueChange={setLanguage}>
+                <SelectTrigger className="bg-white border-gray-200 text-black">
                   <SelectValue placeholder="Select language" />
                 </SelectTrigger>
                 <SelectContent>
@@ -83,20 +302,48 @@ export default function EditNewsPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <Label className="text-black font-bold">Status</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="bg-white border-gray-200 text-black">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
               <Label className="text-black font-bold">Tags</Label>
-              <div className="flex flex-wrap gap-2">
-                <Badge className="bg-[#E0202B] hover:bg-[#E0202B]/90 text-white rounded-full px-3 py-1 font-normal">
-                  Breaking
-                </Badge>
-                <Badge variant="secondary" className="bg-gray-200 hover:bg-gray-300 text-black rounded-full px-3 py-1 font-normal">
-                  World
-                </Badge>
-                <Badge variant="secondary" className="bg-gray-200 hover:bg-gray-300 text-black rounded-full px-3 py-1 font-normal">
-                  Local
-                </Badge>
-              </div>
+              {tagsList.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {tagsList.map(tag => {
+                    const isSelected = selectedTags.includes(tag._id);
+                    return (
+                      <Badge 
+                        key={tag._id}
+                        onClick={() => {
+                          if (isSelected) setSelectedTags(prev => prev.filter(id => id !== tag._id));
+                          else setSelectedTags(prev => [...prev, tag._id]);
+                        }}
+                        className={`cursor-pointer rounded-full px-3 py-1 font-normal ${isSelected ? 'bg-[#E0202B] hover:bg-[#E0202B]/90 text-white border-none' : 'bg-gray-200 hover:bg-gray-300 text-black'}`}
+                      >
+                        {tag.name}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
+              <Input 
+                placeholder="Type new tags separated by comma" 
+                className="bg-white border-gray-200"
+                value={tagsInput}
+                onChange={(e) => setTagsInput(e.target.value)}
+              />
             </div>
 
             <div className="space-y-2">
@@ -106,7 +353,7 @@ export default function EditNewsPage() {
                   <label key={state} className="flex items-center space-x-2 cursor-pointer">
                     <input 
                       type="checkbox" 
-                      className="rounded border-gray-300 text-[#DC143C] focus:ring-[#DC143C]"
+                      className="rounded border-gray-300 text-[#E0202B] focus:ring-[#E0202B]"
                       checked={states.includes(state)}
                       onChange={(e) => {
                         if (e.target.checked) {
@@ -128,30 +375,51 @@ export default function EditNewsPage() {
           <div className="space-y-6">
             <div className="space-y-3">
               <Label className="text-black font-bold">Current Image</Label>
-              <div className="w-48 h-32 bg-gray-200 rounded-lg overflow-hidden border border-gray-200 relative">
-                {/* Simulated existing image */}
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?q=80&w=400&auto=format&fit=crop')] bg-cover bg-center"></div>
+              <div className="w-full max-w-sm h-48 bg-gray-200 rounded-lg overflow-hidden border border-gray-200 relative">
+                {(newImage || currentImage) ? (
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ 
+                      backgroundImage: `url('${newImage ? URL.createObjectURL(newImage) : (currentImage.startsWith('http') ? currentImage : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${currentImage}`)}')` 
+                    }}
+                  ></div>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                    No image
+                  </div>
+                )}
               </div>
-              <Button variant="secondary" className="bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-full font-medium h-10 px-6">
-                Replace Image
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setNewImage(e.target.files[0]);
+                  }
+                }}
+              />
+              <Button 
+                type="button" 
+                onClick={() => fileInputRef.current?.click()} 
+                variant="secondary" 
+                className="bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-full font-medium h-10 px-6"
+              >
+                {currentImage ? "Replace Image" : "Upload Image"}
               </Button>
             </div>
             
             <div className="space-y-2 pt-4">
               <Label className="text-black font-bold">Source</Label>
               <Input 
-                defaultValue="Existing Source" 
-                className="bg-white border-gray-200 text-gray-500"
+                value={source}
+                onChange={(e) => setSource(e.target.value)}
+                placeholder="e.g. ASIAZE News Network" 
+                className="bg-white border-gray-200 text-black"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label className="text-black font-bold">Timestamp</Label>
-              <Input 
-                defaultValue="2023-10-14 10:00" 
-                className="bg-white border-gray-200 text-gray-500"
-              />
-            </div>
           </div>
         </div>
         
@@ -162,11 +430,15 @@ export default function EditNewsPage() {
               Cancel
             </Button>
           </Link>
-          <Button className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full px-8 font-bold">
-            Update
+          <Button 
+            type="submit" 
+            disabled={isSaving}
+            className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full px-8 font-bold disabled:opacity-50"
+          >
+            {isSaving ? "Saving..." : "Update"}
           </Button>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

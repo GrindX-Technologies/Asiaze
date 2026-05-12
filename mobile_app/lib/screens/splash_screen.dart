@@ -23,6 +23,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
     
     final token = await ApiService.getToken();
+    if (!mounted) return;
 
     if (token != null && token.isNotEmpty) {
       Navigator.pushReplacement(

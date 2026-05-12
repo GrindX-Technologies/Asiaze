@@ -41,7 +41,7 @@ export default function StorysListPage() {
           return "";
         };
         const token = getCookie("token");
-        const res = await fetch("/api/stories", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/stories`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {

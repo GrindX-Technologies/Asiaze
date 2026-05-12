@@ -15,7 +15,7 @@ class PreferencesScreen extends StatefulWidget {
 }
 
 class _PreferencesScreenState extends State<PreferencesScreen> {
-  String _selectedLanguage = 'HIN'; // Default to match design
+  String _selectedLanguage = 'EN'; // Default to English
   Set<String> _selectedCategories = {'Politics', 'Entertainment'};
 
   List<String> _baseCategories = [

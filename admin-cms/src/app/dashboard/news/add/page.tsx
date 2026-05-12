@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Upload } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -32,6 +33,8 @@ export default function AddNewsPage() {
   const [language, setLanguage] = useState("en");
   const [states, setStates] = useState<string[]>([]);
   const [tagsInput, setTagsInput] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [tagsList, setTagsList] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   
@@ -47,21 +50,29 @@ export default function AddNewsPage() {
   };
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
         const token = getCookie("token");
-        const res = await fetch("/api/categories", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        
+        const [catsRes, tagsRes] = await Promise.all([
+          fetch(`${apiUrl}/api/categories`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${apiUrl}/api/tags`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ ok: false, json: () => [] }))
+        ]);
+        
+        if (catsRes.ok) {
+          const data = await catsRes.json();
           setCategories(data.filter((c: any) => c.status === 'active' || c.status === 'Active'));
         }
+        
+        if ('ok' in tagsRes && (tagsRes as any).ok) {
+          setTagsList(await (tagsRes as any).json());
+        }
       } catch (err) {
-        console.error("Failed to fetch categories", err);
+        console.error("Failed to fetch data", err);
       }
     };
-    fetchCategories();
+    fetchData();
   }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,12 +87,20 @@ export default function AddNewsPage() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch("/api/upload", {
+    const token = getCookie("token");
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/upload`, {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
       body: formData,
     });
 
-    if (!res.ok) throw new Error("Upload failed");
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.message || "Image upload failed");
+    }
     const data = await res.json();
     return data.url;
   };
@@ -100,10 +119,35 @@ export default function AddNewsPage() {
         coverImage = await uploadFile(imageFile);
       }
 
-      // Convert tags input (comma separated) into array, if needed
-      // Currently backend expects ObjectIds for tags, but we'll just pass empty array if tags aren't properly linked yet
-      // To keep it simple, we'll omit tags or handle them if backend supports string tags
       const token = getCookie("token");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+      // Process new tags from input
+      let finalTags = [...selectedTags];
+      if (tagsInput.trim()) {
+        const newTagNames = tagsInput.split(',').map(t => t.trim()).filter(t => t);
+        for (const tagName of newTagNames) {
+          const existing = tagsList.find(t => t.name.toLowerCase() === tagName.toLowerCase());
+          if (existing) {
+            if (!finalTags.includes(existing._id)) {
+              finalTags.push(existing._id);
+            }
+          } else {
+            // Create new tag
+            const slug = tagName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+            const tagRes = await fetch(`${apiUrl}/api/tags`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+              body: JSON.stringify({ name: tagName, slug, status: 'active' })
+            });
+            if (tagRes.ok) {
+              const newTag = await tagRes.json();
+              finalTags.push(newTag._id);
+            }
+          }
+        }
+      }
+
       const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
 
       const payload = {
@@ -118,10 +162,10 @@ export default function AddNewsPage() {
         category: categoryId,
         coverImage,
         status,
-        tags: [] // Backend expects ObjectIds, sending empty array for now
+        tags: finalTags
       };
 
-      const res = await fetch("/api/news", {
+      const res = await fetch(`${apiUrl}/api/news`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -138,12 +182,13 @@ export default function AddNewsPage() {
       if (res.ok) {
         router.push("/dashboard/news");
       } else {
-        const errorData = await res.json();
-        alert("Failed to create news: " + errorData.message);
+        const errorData = await res.json().catch(() => null);
+        console.error("Backend Error Data:", errorData);
+        alert(`Failed to create news: ${errorData?.message || errorData?.error || res.statusText || 'Unknown backend error'}`);
       }
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred during submission");
+    } catch (err: any) {
+      console.error("Submission Error:", err);
+      alert(`An error occurred during submission: ${err.message || 'Network/Processing Error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -160,11 +205,11 @@ export default function AddNewsPage() {
             <div className="space-y-2">
               <Label className="text-black font-bold">Headline *</Label>
               <Input 
-                placeholder="Enter headline (max 100 chars)" 
-                className="bg-white border-gray-200"
+                placeholder="Enter headline (max 250 chars)" 
+                className="bg-white border-gray-200 text-black"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                maxLength={100}
+                maxLength={250}
                 required
               />
             </div>
@@ -233,8 +278,27 @@ export default function AddNewsPage() {
             
             <div className="space-y-2">
               <Label className="text-black font-bold">Tags</Label>
+              {tagsList.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {tagsList.map(tag => {
+                    const isSelected = selectedTags.includes(tag._id);
+                    return (
+                      <Badge 
+                        key={tag._id}
+                        onClick={() => {
+                          if (isSelected) setSelectedTags(prev => prev.filter(id => id !== tag._id));
+                          else setSelectedTags(prev => [...prev, tag._id]);
+                        }}
+                        className={`cursor-pointer rounded-full px-3 py-1 font-normal ${isSelected ? 'bg-[#E0202B] hover:bg-[#E0202B]/90 text-white border-none' : 'bg-gray-200 hover:bg-gray-300 text-black'}`}
+                      >
+                        {tag.name}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
               <Input 
-                placeholder="Type tags separated by comma" 
+                placeholder="Type new tags separated by comma" 
                 className="bg-white border-gray-200"
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}

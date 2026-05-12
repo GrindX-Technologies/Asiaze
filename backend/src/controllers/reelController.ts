@@ -6,7 +6,17 @@ import Reel from '../models/Reel';
 // @access  Public
 export const getReels = async (req: Request, res: Response): Promise<void> => {
   try {
-    const reels = await Reel.find({ status: 'active' }).populate('uploader', 'name avatar').sort({ createdAt: -1 });
+    const { status } = req.query;
+    const query: any = {};
+    
+    if (status && status !== 'all') {
+      query.status = status;
+    } else if (!status) {
+      // Default to active for public feeds
+      query.status = 'active';
+    }
+
+    const reels = await Reel.find(query).populate('uploader', 'name avatar').sort({ createdAt: -1 });
     res.json(reels);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -18,13 +28,14 @@ export const getReels = async (req: Request, res: Response): Promise<void> => {
 // @access  Private/Admin
 export const createReel = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { title, description, videoUrl, thumbnailUrl, status } = req.body;
+    const { title, description, videoUrl, thumbnailUrl, articleLink, status } = req.body;
     
     const reel = new Reel({
       title,
       description,
       videoUrl,
       thumbnailUrl,
+      articleLink,
       uploader: (req as any).user._id,
       status
     });
@@ -67,6 +78,7 @@ export const updateReel = async (req: Request, res: Response): Promise<void> => 
     reel.description = req.body.description !== undefined ? req.body.description : reel.description;
     reel.videoUrl = req.body.videoUrl || reel.videoUrl;
     reel.thumbnailUrl = req.body.thumbnailUrl !== undefined ? req.body.thumbnailUrl : reel.thumbnailUrl;
+    reel.articleLink = req.body.articleLink !== undefined ? req.body.articleLink : reel.articleLink;
     reel.status = req.body.status || reel.status;
 
     const updatedReel = await reel.save();

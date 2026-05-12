@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useToken } from "@/components/TokenProvider";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, UserCheck, FileText, Film } from "lucide-react";
@@ -8,6 +9,8 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell, Legend
 } from "recharts";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const COLORS = ['#E0202B', '#9ca3af', '#6b7280', '#d1d5db'];
 
@@ -21,24 +24,33 @@ export default function AnalyticsPage() {
   const [topReels, setTopReels] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isExportingCSV, setIsExportingCSV] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const token = useToken();
 
   useEffect(() => {
+    const getCookieToken = () => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; token=`);
+      if (parts.length === 2) return parts.pop()?.split(";").shift() || "";
+      return "";
+    };
+
     const fetchData = async () => {
       try {
         setFetchError(null);
-        const getCookie = (name: string) => {
-          const value = `; ${document.cookie}`;
-          const parts = value.split(`; ${name}=`);
-          if (parts.length === 2) return parts.pop()?.split(';').shift();
-          return "";
-        };
-        const token = getCookie("token");
+        const authToken = token || getCookieToken();
+        if (!authToken) {
+          setFetchError("Unauthorized. Your session may have expired.");
+          return;
+        }
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
         const [usersRes, newsRes, reelsRes, categoriesRes] = await Promise.all([
-          fetch("/api/users", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("/api/news", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("/api/reels", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("/api/categories", { headers: { Authorization: `Bearer ${token}` } })
+          fetch(`${apiUrl}/api/users`, { headers: { Authorization: `Bearer ${authToken}` } }),
+          fetch(`${apiUrl}/api/news`, { headers: { Authorization: `Bearer ${authToken}` } }),
+          fetch(`${apiUrl}/api/reels`, { headers: { Authorization: `Bearer ${authToken}` } }),
+          fetch(`${apiUrl}/api/categories`, { headers: { Authorization: `Bearer ${authToken}` } })
         ]);
 
         const usersData = usersRes.ok ? await usersRes.json() : [];
@@ -74,10 +86,16 @@ export default function AnalyticsPage() {
           d.setDate(d.getDate() - (6 - i));
           return d.toISOString().split('T')[0];
         });
-        const ugData = last7Days.map(dateStr => {
-          const newCount = users.filter((u: any) => u.createdAt && u.createdAt.startsWith(dateStr)).length;
-          const returningCount = Math.floor(Math.random() * 20); // Simulating returning users for visual
-          return { name: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }), new: newCount, returning: returningCount };
+        const ugData = last7Days.map((dateStr, index) => {
+          const current = users.filter((u: any) => u.createdAt && u.createdAt.startsWith(dateStr)).length;
+          
+          // Realistic previous period calculation (7 days before the current dateStr)
+          const prevDate = new Date(dateStr);
+          prevDate.setDate(prevDate.getDate() - 7);
+          const prevDateStr = prevDate.toISOString().split('T')[0];
+          const previous = users.filter((u: any) => u.createdAt && u.createdAt.startsWith(prevDateStr)).length;
+          
+          return { name: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }), new: current, returning: previous };
         });
         setUserGrowthData(ugData);
 
@@ -115,7 +133,112 @@ export default function AnalyticsPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [token]);
+
+  const handleExportCSV = async () => {
+    setIsExportingCSV(true);
+    try {
+      let csvContent = "data:text/csv;charset=utf-8,";
+      
+      // KPI Stats
+      csvContent += "KPI Statistics\\n";
+      csvContent += "Total Users,Active Users,Total Articles,Total Reels\\n";
+      csvContent += `${stats.totalUsers},${stats.activeUsers},${stats.totalArticles},${stats.totalReels}\\n\\n`;
+
+      // Top Articles
+      csvContent += "Top 10 Articles\\n";
+      csvContent += "Title,Views,Likes,Shares\\n";
+      topArticles.forEach(a => {
+        csvContent += `"${(a.title || "").replace(/"/g, '""')}",${a.views || 0},${a.likes || 0},${a.shares || 0}\\n`;
+      });
+      csvContent += "\\n";
+
+      // Top Reels
+      csvContent += "Top 10 Reels\\n";
+      csvContent += "Title,Views,Likes,Shares\\n";
+      topReels.forEach(r => {
+        csvContent += `"${(r.title || "").replace(/"/g, '""')}",${r.views || 0},${r.likes || 0},${r.shares || 0}\\n`;
+      });
+      csvContent += "\\n";
+
+      // User Growth
+      csvContent += "User Growth (Last 7 Days)\\n";
+      csvContent += "Day,New Users,Returning Users\\n";
+      userGrowthData.forEach(ug => {
+        csvContent += `${ug.name},${ug.new},${ug.returning}\\n`;
+      });
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `asiaze_analytics_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("CSV Export Error:", error);
+      alert("Failed to export CSV. Please try again.");
+    } finally {
+      setIsExportingCSV(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    setIsExportingPDF(true);
+    try {
+      const doc = new jsPDF();
+      doc.setFontSize(20);
+      doc.text("ASIAZE Analytics Report", 14, 22);
+      
+      doc.setFontSize(12);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
+
+      // KPI Table
+      autoTable(doc, {
+        startY: 40,
+        head: [['Metric', 'Value']],
+        body: [
+          ['Total Users', stats.totalUsers],
+          ['Active Users', stats.activeUsers],
+          ['Total Articles', stats.totalArticles],
+          ['Total Reels', stats.totalReels],
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [224, 32, 43] }
+      });
+
+      let finalY = (doc as any).lastAutoTable.finalY || 40;
+
+      // Top Articles Table
+      doc.text("Top 10 Articles", 14, finalY + 15);
+      autoTable(doc, {
+        startY: finalY + 20,
+        head: [['Title', 'Views', 'Likes', 'Shares']],
+        body: topArticles.map(a => [a.title || 'N/A', a.views || 0, a.likes || 0, a.shares || 0]),
+        theme: 'striped',
+        headStyles: { fillColor: [224, 32, 43] }
+      });
+
+      finalY = (doc as any).lastAutoTable.finalY || finalY + 20;
+
+      // Top Reels Table
+      doc.text("Top 10 Reels", 14, finalY + 15);
+      autoTable(doc, {
+        startY: finalY + 20,
+        head: [['Title', 'Views', 'Likes', 'Shares']],
+        body: topReels.map(r => [r.title || 'N/A', r.views || 0, r.likes || 0, r.shares || 0]),
+        theme: 'striped',
+        headStyles: { fillColor: [224, 32, 43] }
+      });
+
+      doc.save(`asiaze_analytics_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error("PDF Export Error:", error);
+      alert("Failed to export PDF. Please try again.");
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
 
   if (isLoading) {
     return <div className="p-8 text-center">Loading analytics data...</div>;
@@ -328,11 +451,20 @@ export default function AnalyticsPage() {
 
       {/* Footer Actions */}
       <div className="flex justify-end gap-4 pt-4">
-        <Button className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full font-bold px-8">
-          Export as PDF
+        <Button 
+          onClick={handleExportPDF} 
+          disabled={isExportingPDF}
+          className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full font-bold px-8"
+        >
+          {isExportingPDF ? "Exporting PDF..." : "Export as PDF"}
         </Button>
-        <Button variant="outline" className="bg-gray-100 hover:bg-gray-200 text-gray-900 border-0 rounded-full font-bold px-8">
-          Export as CSV
+        <Button 
+          onClick={handleExportCSV}
+          disabled={isExportingCSV}
+          variant="outline" 
+          className="bg-gray-100 hover:bg-gray-200 text-gray-900 border-0 rounded-full font-bold px-8"
+        >
+          {isExportingCSV ? "Exporting CSV..." : "Export as CSV"}
         </Button>
       </div>
 

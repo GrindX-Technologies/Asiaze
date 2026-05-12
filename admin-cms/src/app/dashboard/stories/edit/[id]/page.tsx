@@ -53,7 +53,7 @@ export default function EditStoryPage() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch("/api/upload", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/upload`, {
       method: "POST",
       body: formData,
     });

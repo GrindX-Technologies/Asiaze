@@ -29,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'Reels',
   ];
   List<String> _selectedCategories = ['Politics', 'Entertainment'];
-  Map<String, String> _categoryNameToId = {};
+  final Map<String, String> _categoryNameToId = {};
 
   String _activeTab = 'My Feed';
 
@@ -422,6 +422,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 MaterialPageRoute(
                   builder: (context) => ArticleDetailScreen(
                     article: _feedData[index],
+                    feedList: _feedData,
+                    initialIndex: index,
                   ),
                 ),
               );
@@ -437,7 +439,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       elevation: 0,
       centerTitle: true,
-      title: Container(
+      title: SizedBox(
         height: 36, // Fixed height to constrain the image appropriately
         child: Image.asset(
           'assets/images/header_logo.png',

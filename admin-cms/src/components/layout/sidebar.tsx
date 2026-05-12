@@ -59,6 +59,10 @@ const sidebarNavItems = [
     href: "/dashboard/analytics",
   },
   {
+    title: "Breaking News",
+    href: "/dashboard/breaking-news",
+  },
+  {
     title: "Setting",
     href: "/dashboard/settings",
   },

@@ -132,10 +132,17 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const SizedBox(height: 40),
               // Logo
-              Image.asset(
-                'assets/images/logo.png',
-                width: 200, // Explicit width for the horizontal text logo
-                fit: BoxFit.contain,
+              Container(
+                width: 150,
+                height: 150,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  fit: BoxFit.cover,
+                ),
               ),
               const SizedBox(height: 60),
               // Email / Phone Field

@@ -6,7 +6,11 @@ import Category from '../models/Category';
 // @access  Public
 export const getCategories = async (req: Request, res: Response): Promise<void> => {
   try {
-    const categories = await Category.find({}).sort({ createdAt: -1 });
+    const filter: any = {};
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+    const categories = await Category.find(filter).sort({ createdAt: -1 });
     res.json(categories);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -50,8 +54,8 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
     
     category.name = req.body.name || category.name;
     category.slug = req.body.slug || category.slug;
-    category.image = req.body.image || category.image;
-    category.description = req.body.description || category.description;
+    category.image = req.body.image !== undefined ? req.body.image : category.image;
+    category.description = req.body.description !== undefined ? req.body.description : category.description;
     category.status = req.body.status || category.status;
 
     const updatedCategory = await category.save();

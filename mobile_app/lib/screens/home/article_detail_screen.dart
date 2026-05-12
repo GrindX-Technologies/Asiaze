@@ -1,51 +1,122 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../services/saved_articles_service.dart';
 
-class ArticleDetailScreen extends StatelessWidget {
+class ArticleDetailScreen extends StatefulWidget {
   final Map<String, dynamic> article;
+  final List<dynamic>? feedList;
+  final int? initialIndex;
 
-  const ArticleDetailScreen({super.key, required this.article});
+  const ArticleDetailScreen({
+    super.key,
+    required this.article,
+    this.feedList,
+    this.initialIndex,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    // Provide some fallback data in case the passed article map is incomplete
+  State<ArticleDetailScreen> createState() => _ArticleDetailScreenState();
+}
+
+class _ArticleDetailScreenState extends State<ArticleDetailScreen> with SingleTickerProviderStateMixin {
+  late PageController _pageController;
+  late int _currentIndex;
+  bool _isSaved = false;
+  bool _isLiked = false;
+  late AnimationController _saveAnimController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex ?? 0;
+    _pageController = PageController(initialPage: _currentIndex);
+    
+    _saveAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.3), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.3, end: 1.0), weight: 50),
+    ]).animate(CurvedAnimation(
+      parent: _saveAnimController,
+      curve: Curves.easeInOut,
+    ));
+
+    _checkSavedStatus();
+    // Simulate checking like status locally
+    _isLiked = false;
+  }
+
+  Future<void> _checkSavedStatus() async {
+    final currentArticle = _getCurrentArticle();
+    final saved = await SavedArticlesService.isSaved(currentArticle['id'] ?? '');
+    if (mounted) {
+      setState(() => _isSaved = saved);
+    }
+  }
+
+  Future<void> _toggleSave() async {
+    final currentArticle = _getCurrentArticle();
+    if (_isSaved) {
+      await SavedArticlesService.removeArticle(currentArticle['id'] ?? '');
+    } else {
+      await SavedArticlesService.saveArticle(currentArticle);
+      _saveAnimController.forward(from: 0.0);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Article saved!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+    _checkSavedStatus();
+  }
+
+  void _toggleLike() {
+    setState(() {
+      _isLiked = !_isLiked;
+    });
+    if (_isLiked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Article liked!'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
+  }
+
+  void _shareArticle() {
+    final currentArticle = _getCurrentArticle();
+    final String url = 'https://asiaze.cloud/article/${currentArticle['id'] ?? ''}';
+    // ignore: deprecated_member_use
+    Share.share('Check out this article on ASIAZE:\n$url');
+  }
+
+  Map<String, dynamic> _getCurrentArticle() {
+    if (widget.feedList != null && widget.feedList!.isNotEmpty) {
+      return widget.feedList![_currentIndex]['mappedArticle'] ?? widget.feedList![_currentIndex];
+    }
+    return widget.article;
+  }
+
+  @override
+  void dispose() {
+    _saveAnimController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildArticleView(Map<String, dynamic> article) {
     final title = article['title'] ?? 'Breakthrough in Renewable Energy: The Future Looks Bright';
     final subtitle = article['excerpt'] ?? 'A new era of sustainable energy solutions is emerging, promising a cleaner and more efficient future.';
     final source = article['meta'] ?? 'Source: TechCrunch | Published: April 1, 2023, 10:00 AM';
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'ASIAZE',
-          style: GoogleFonts.lexendDeca(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: Colors.black,
-            letterSpacing: -0.5,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share, color: Colors.black),
-            onPressed: () {
-              // Handle share
-            },
-          ),
-        ],
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: Color(0xFFE2E8F0)),
-        ),
-      ),
-      body: SingleChildScrollView(
+    return SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -144,7 +215,66 @@ class ArticleDetailScreen extends StatelessWidget {
             const SizedBox(height: 40),
           ],
         ),
+      );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFDC143C),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            'asiaze',
+            style: GoogleFonts.lexendDeca(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -1,
+            ),
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share, color: Colors.black),
+            onPressed: _shareArticle,
+          ),
+        ],
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+        ),
       ),
+      body: widget.feedList != null && widget.feedList!.isNotEmpty
+          ? PageView.builder(
+              controller: _pageController,
+              scrollDirection: Axis.vertical,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentIndex = index;
+                  _isLiked = false;
+                });
+                _checkSavedStatus();
+              },
+              itemCount: widget.feedList!.length,
+              itemBuilder: (context, index) {
+                final article = widget.feedList![index]['mappedArticle'] ?? widget.feedList![index];
+                return _buildArticleView(article);
+              },
+            )
+          : _buildArticleView(widget.article),
       bottomNavigationBar: _buildBottomActionBar(),
     );
   }
@@ -168,22 +298,27 @@ class ArticleDetailScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             IconButton(
-              icon: const Icon(Icons.favorite_border, size: 28, color: Colors.black),
-              onPressed: () {
-                // Handle like
-              },
+              icon: Icon(
+                _isLiked ? Icons.favorite : Icons.favorite_border,
+                size: 28,
+                color: _isLiked ? const Color(0xFFDC143C) : Colors.black,
+              ),
+              onPressed: _toggleLike,
             ),
-            IconButton(
-              icon: const Icon(Icons.bookmark_border, size: 28, color: Colors.black),
-              onPressed: () {
-                // Handle bookmark
-              },
+            ScaleTransition(
+              scale: _scaleAnimation,
+              child: IconButton(
+                icon: Icon(
+                  _isSaved ? Icons.bookmark : Icons.bookmark_border,
+                  size: 28,
+                  color: _isSaved ? const Color(0xFFDC143C) : Colors.black,
+                ),
+                onPressed: _toggleSave,
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.share, size: 28, color: Colors.black),
-              onPressed: () {
-                // Handle share
-              },
+              onPressed: _shareArticle,
             ),
           ],
         ),

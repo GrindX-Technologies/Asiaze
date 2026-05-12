@@ -53,34 +53,160 @@ export default function UsersListPage() {
     }
   };
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setFetchError(null);
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-        const res = await fetch(`${apiUrl}/api/users`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setUsersData(Array.isArray(data) ? data : data.users || []);
-        } else {
-          const errorData = await res.json().catch(() => ({}));
-          const message = errorData?.message || "Failed to fetch users";
-          setFetchError(message);
-          setUsersData([]);
-          console.error("Failed to fetch users:", message);
-        }
-      } catch (err) {
-        setFetchError("Network error while fetching users");
+  const fetchUsersList = async () => {
+    try {
+      setFetchError(null);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${apiUrl}/api/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUsersData(Array.isArray(data) ? data : data.users || []);
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        const message = errorData?.message || "Failed to fetch users";
+        setFetchError(message);
         setUsersData([]);
-        console.error(err);
-      } finally {
-        setIsLoading(false);
       }
-    };
-    fetchUsers();
+    } catch (err) {
+      setFetchError("Network error while fetching users");
+      setUsersData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsersList();
   }, [token]);
+
+  const handleBulkStatusUpdate = async (status: 'active' | 'blocked') => {
+    if (selectedUsers.length === 0) return;
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${apiUrl}/api/users/bulk-status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ userIds: selectedUsers, status })
+      });
+      
+      if (res.ok) {
+        setSelectedUsers([]);
+        fetchUsersList();
+      } else {
+        const err = await res.json();
+        setFetchError(err.message || `Failed to ${status === 'blocked' ? 'block' : 'unblock'} users`);
+      }
+    } catch (err) {
+      setFetchError("Network error occurred during bulk update");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedUsers.length === 0) return;
+    if (!window.confirm("Are you sure you want to delete the selected users? This action cannot be undone.")) return;
+    
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${apiUrl}/api/users/bulk-delete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ userIds: selectedUsers })
+      });
+      
+      if (res.ok) {
+        setSelectedUsers([]);
+        fetchUsersList();
+      } else {
+        const err = await res.json();
+        setFetchError(err.message || "Failed to delete users");
+      }
+    } catch (err) {
+      setFetchError("Network error occurred during bulk delete");
+    }
+  };
+
+  const handleSingleStatusUpdate = async (id: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${apiUrl}/api/users/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      
+      if (res.ok) {
+        fetchUsersList();
+      }
+    } catch (err) {
+      setFetchError("Network error occurred");
+    }
+  };
+
+  const handleSingleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${apiUrl}/api/users/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      if (res.ok) {
+        fetchUsersList();
+      }
+    } catch (err) {
+      setFetchError("Network error occurred");
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (selectedUsers.length === 0) return;
+    
+    // Filter out the selected users from our state
+    const usersToExport = usersData.filter(u => selectedUsers.includes(u._id));
+    
+    // Create CSV Headers
+    const headers = ["Name", "Email", "Phone", "Role", "Status", "Date Registered", "Referral ID"];
+    
+    // Map user data to CSV rows
+    const rows = usersToExport.map(user => [
+      `"${user.name || ''}"`,
+      `"${user.email || ''}"`,
+      `"${user.phone || ''}"`,
+      `"${user.role || ''}"`,
+      `"${!user.isBlocked ? 'active' : 'blocked'}"`,
+      `"${new Date(user.createdAt).toLocaleDateString()}"`,
+      `"${user.referralId || ''}"`
+    ]);
+    
+    // Combine headers and rows
+    const csvContent = [headers.join(","), ...rows.map(row => row.join(","))].join("\n");
+    
+    // Create Blob and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `asiaze_users_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleAddUser = async () => {
     setError(null);
@@ -201,7 +327,7 @@ export default function UsersListPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 font-medium">Email</p>
-                  <p className="text-base text-black font-semibold">{viewingUser.email}</p>
+                  <p className="text-base text-black font-semibold break-all break-words">{viewingUser.email}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 font-medium">Phone</p>
@@ -329,12 +455,12 @@ export default function UsersListPage() {
                   <TableCell>
                     <Badge 
                       className={`text-white border-none rounded-full px-3 py-0.5 font-medium ${
-                        item.status === 'active' || item.status === 'Active'
+                        !item.isBlocked
                           ? 'bg-[#22C55E] hover:bg-[#22C55E]/90' 
                           : 'bg-[#9CA3AF] hover:bg-[#9CA3AF]/90'
                       }`}
                     >
-                      {item.status || "active"}
+                      {!item.isBlocked ? "active" : "blocked"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-gray-900 font-medium">{new Date(item.createdAt).toLocaleDateString()}</TableCell>
@@ -348,12 +474,21 @@ export default function UsersListPage() {
                         className="w-[18px] h-[18px] cursor-pointer hover:text-black transition-colors" 
                         onClick={() => openEditModal(item)}
                       />
-                      {item.status === 'blocked' ? (
-                         <CheckCircle2 className="w-[18px] h-[18px] cursor-pointer hover:text-green-600 text-gray-700 transition-colors" />
+                      {item.isBlocked ? (
+                         <CheckCircle2 
+                           className="w-[18px] h-[18px] cursor-pointer hover:text-green-600 text-gray-700 transition-colors" 
+                           onClick={() => handleSingleStatusUpdate(item._id, 'blocked')}
+                         />
                       ) : (
-                        <Ban className="w-[18px] h-[18px] cursor-pointer hover:text-red-600 text-gray-700 transition-colors" />
+                        <Ban 
+                          className="w-[18px] h-[18px] cursor-pointer hover:text-red-600 text-gray-700 transition-colors" 
+                          onClick={() => handleSingleStatusUpdate(item._id, 'active')}
+                        />
                       )}
-                      <Trash2 className="w-[18px] h-[18px] cursor-pointer hover:text-red-600 text-[#E0202B] transition-colors" />
+                      <Trash2 
+                        className="w-[18px] h-[18px] cursor-pointer hover:text-red-600 text-[#E0202B] transition-colors" 
+                        onClick={() => handleSingleDelete(item._id)}
+                      />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -366,16 +501,28 @@ export default function UsersListPage() {
       {/* Footer Bulk Actions */}
       {selectedUsers.length > 0 && (
         <div className="flex flex-wrap gap-3 pt-4">
-          <Button className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full font-bold px-6">
+          <Button 
+            onClick={() => handleBulkStatusUpdate('blocked')}
+            className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full font-bold px-6"
+          >
             Block Users
           </Button>
-          <Button className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full font-bold px-6">
+          <Button 
+            onClick={() => handleBulkStatusUpdate('active')}
+            className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full font-bold px-6"
+          >
             Unblock Users
           </Button>
-          <Button className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full font-bold px-6">
+          <Button 
+            onClick={handleBulkDelete}
+            className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full font-bold px-6"
+          >
             Delete Users
           </Button>
-          <Button className="bg-[#22C55E] hover:bg-[#16a34a] text-white rounded-full font-bold px-6">
+          <Button 
+            onClick={handleExportCSV}
+            className="bg-[#22C55E] hover:bg-[#16a34a] text-white rounded-full font-bold px-6"
+          >
             USER EXPORT
           </Button>
         </div>

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/api_service.dart';
 import '../../services/translation_service.dart';
+import '../../services/saved_reels_service.dart';
 
 class ReelsScreen extends StatefulWidget {
   const ReelsScreen({super.key});
@@ -72,6 +75,7 @@ class _ReelsScreenState extends State<ReelsScreen> {
           'likes': (item['likes'] ?? 0).toString(),
           'videoUrl': item['videoUrl'],
           'thumbnailUrl': item['thumbnailUrl'],
+          'articleLink': item['articleLink'],
           'duration': '01:00', // Placeholder
           'current': '00:00',  // Placeholder
         });
@@ -197,14 +201,71 @@ class ReelVideoPlayer extends StatefulWidget {
   State<ReelVideoPlayer> createState() => _ReelVideoPlayerState();
 }
 
-class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
+class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProviderStateMixin {
   VideoPlayerController? _controller;
   bool _isPlaying = true;
+  bool _isMuted = false;
+  bool _isSaved = false;
+  
+  late AnimationController _saveAnimController;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
+    
+    _saveAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.3), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.3, end: 1.0), weight: 50),
+    ]).animate(CurvedAnimation(
+      parent: _saveAnimController,
+      curve: Curves.easeInOut,
+    ));
+
+    _checkSavedStatus();
     _initializeVideo();
+  }
+
+  Future<void> _checkSavedStatus() async {
+    final saved = await SavedReelsService.isSaved(widget.reel['id'] ?? '');
+    if (mounted) {
+      setState(() => _isSaved = saved);
+    }
+  }
+
+  Future<void> _toggleSave() async {
+    if (_isSaved) {
+      await SavedReelsService.removeReel(widget.reel['id'] ?? '');
+    } else {
+      await SavedReelsService.saveReel(widget.reel);
+      _saveAnimController.forward(from: 0.0);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Reel saved!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+    _checkSavedStatus();
+  }
+
+  void _shareReel() {
+    final String url = 'https://asiaze.cloud/reel/${widget.reel['id']}';
+    // ignore: deprecated_member_use
+    Share.share('Check out this reel on ASIAZE:\n$url');
+  }
+
+  void _toggleMute() {
+    setState(() {
+      _isMuted = !_isMuted;
+      _controller?.setVolume(_isMuted ? 0.0 : 1.0);
+    });
   }
 
   Future<void> _initializeVideo() async {
@@ -223,6 +284,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
 
   @override
   void dispose() {
+    _saveAnimController.dispose();
     _controller?.dispose();
     super.dispose();
   }
@@ -318,8 +380,8 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
                   fit: BoxFit.contain,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.volume_up, color: Colors.white),
-                  onPressed: () {}, // Toggle mute
+                  icon: Icon(_isMuted ? Icons.volume_off : Icons.volume_up, color: Colors.white),
+                  onPressed: _toggleMute, // Toggle mute
                 ),
               ],
             ),
@@ -334,9 +396,21 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
             children: [
               _buildActionButton(Icons.favorite, widget.reel['likes']),
               const SizedBox(height: 24),
-              _buildActionButton(Icons.bookmark, null),
+              GestureDetector(
+                onTap: _toggleSave,
+                child: ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: _buildActionButton(
+                    _isSaved ? Icons.bookmark : Icons.bookmark_border,
+                    null,
+                  ),
+                ),
+              ),
               const SizedBox(height: 24),
-              _buildActionButton(Icons.send, null), // Share icon
+              GestureDetector(
+                onTap: _shareReel,
+                child: _buildActionButton(Icons.send, null),
+              ),
             ],
           ),
         ),
@@ -408,18 +482,22 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
                   const Icon(Icons.keyboard_arrow_up, color: Colors.white, size: 16),
                 ],
               ),
-              GestureDetector(
-                onTap: () {
-                  // Handle tap to open article
-                },
-                child: Text(
-                  widget.tTapToOpen,
-                  style: GoogleFonts.roboto(
-                    color: Colors.white,
-                    fontSize: 12,
+              if (widget.reel['articleLink'] != null && widget.reel['articleLink'].toString().isNotEmpty)
+                GestureDetector(
+                  onTap: () async {
+                    final url = widget.reel['articleLink'];
+                    if (await canLaunchUrl(Uri.parse(url))) {
+                      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  child: Text(
+                    widget.tTapToOpen,
+                    style: GoogleFonts.roboto(
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),

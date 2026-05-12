@@ -218,6 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         
         // Navigate back to home to refresh app state with new language
         Future.delayed(const Duration(seconds: 1), () {
+          if (!mounted) return;
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const HomeScreen()),

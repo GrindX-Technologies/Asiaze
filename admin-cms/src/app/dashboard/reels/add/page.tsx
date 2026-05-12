@@ -14,11 +14,16 @@ export default function AddReelPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [articleLink, setArticleLink] = useState("");
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   const videoInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
@@ -46,18 +51,42 @@ export default function AddReelPage() {
     return "";
   };
 
-  const uploadFile = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
+  const uploadFile = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append("file", file);
 
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/upload`);
+      
+      const token = getCookie("token");
+      if (token) {
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      }
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(percentComplete);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            resolve(data.url);
+          } catch (e) {
+            reject(new Error("Invalid JSON response"));
+          }
+        } else {
+          reject(new Error(`Upload failed with status ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Network error during upload"));
+      xhr.send(formData);
     });
-
-    if (!res.ok) throw new Error("Upload failed");
-    const data = await res.json();
-    return data.url;
   };
 
   const handleSubmit = async (e: React.FormEvent, status: "active" | "inactive" = "active") => {
@@ -68,15 +97,21 @@ export default function AddReelPage() {
     }
 
     setIsSubmitting(true);
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadSuccess(false);
+
     try {
       const videoUrl = await uploadFile(videoFile);
       let thumbnailUrl = "";
       if (thumbnailFile) {
         thumbnailUrl = await uploadFile(thumbnailFile);
       }
+      setUploadSuccess(true);
+      setIsUploading(false);
 
       const token = getCookie("token");
-      const res = await fetch("/api/reels", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/reels`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,7 +122,8 @@ export default function AddReelPage() {
           description,
           videoUrl,
           thumbnailUrl,
-          status
+          articleLink,
+          status: "active"
         })
       });
 
@@ -102,11 +138,12 @@ export default function AddReelPage() {
         const errorData = await res.json();
         alert("Failed to create reel: " + errorData.message);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("An error occurred during submission");
+      alert(`An error occurred during submission: ${err.message}`);
     } finally {
       setIsSubmitting(false);
+      setIsUploading(false);
     }
   };
 
@@ -130,54 +167,86 @@ export default function AddReelPage() {
           <div className="space-y-2">
             <Label className="text-black font-bold text-base">Summary/Caption</Label>
             <Textarea 
-              placeholder="Enter summary" 
-              className="bg-white border-gray-200 min-h-[160px] resize-none"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter summary" 
+              className="bg-white border-gray-200 min-h-[160px] resize-none text-gray-900"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-black font-bold text-base">Full Article Link (Optional)</Label>
+            <Input 
+              value={articleLink}
+              onChange={(e) => setArticleLink(e.target.value)}
+              placeholder="https://example.com/article" 
+              className="bg-white border-gray-200 h-12 text-gray-900"
             />
           </div>
         </div>
 
         {/* Right Column */}
         <div className="space-y-8">
-          <div className="space-y-2">
+          <div className="space-y-4">
             <Label className="text-black font-bold text-base">Upload Video</Label>
-            <div 
-              onClick={() => videoInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 flex items-center justify-between overflow-hidden h-[180px] cursor-pointer hover:bg-gray-100 transition-colors"
-            >
-              <input 
-                type="file" 
-                accept="video/*" 
-                className="hidden" 
-                ref={videoInputRef}
-                onChange={handleVideoChange}
-              />
-              <div className="flex-1 px-8 text-center sm:text-left">
-                {videoFile ? (
-                  <p className="text-green-600 font-medium truncate max-w-[200px]">{videoFile.name}</p>
-                ) : (
-                  <p className="text-gray-500 font-medium">
-                    Drag & drop video here or click to <br className="hidden sm:block" />
-                    <span className="text-[#3b82f6] cursor-pointer hover:underline">browse</span>
-                  </p>
-                )}
+            <div className="space-y-3">
+              <div className="flex flex-col md:flex-row gap-6">
+                <div 
+                  onClick={() => videoInputRef.current?.click()}
+                  className="border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors h-[400px] flex-1"
+                >
+                  <input 
+                    type="file" 
+                    accept="video/*" 
+                    className="hidden" 
+                    ref={videoInputRef}
+                    onChange={handleVideoChange}
+                  />
+                  <div className="px-8 text-center">
+                    {videoFile ? (
+                      <div className="space-y-2">
+                        <Upload className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                        <p className="text-green-600 font-medium truncate max-w-[200px]">{videoFile.name}</p>
+                        {uploadSuccess && <p className="text-sm text-green-500 font-medium">✓ Upload Complete</p>}
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-[#E0202B] mx-auto mb-2" />
+                        <p className="text-gray-500 font-medium">
+                          Drag & drop video here or click to <br />
+                          <span className="text-[#3b82f6] cursor-pointer hover:underline">browse</span>
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="w-[225px] h-[400px] bg-black rounded-xl overflow-hidden relative flex shrink-0 items-center justify-center text-gray-400 shadow-md">
+                  {videoPreview ? (
+                    <video src={videoPreview} className="object-cover w-full h-full" controls playsInline />
+                  ) : (
+                    <span>No Video</span>
+                  )}
+                </div>
               </div>
-              <div className="w-[200px] h-full bg-gray-200 relative flex items-center justify-center text-gray-400">
-                {videoPreview ? (
-                  <video src={videoPreview} className="object-cover w-full h-full" muted />
-                ) : (
-                  <span>No Video</span>
-                )}
-              </div>
+              
+              {isUploading && videoFile && (
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+                  <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                  <p className="text-xs text-gray-500 mt-1 text-right">{uploadProgress}%</p>
+                </div>
+              )}
+              
+              <p className="text-sm text-gray-500">Recommended dimensions: 1080x1920px (9:16 ratio)</p>
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-4">
             <Label className="text-black font-bold text-base">Upload Thumbnail (Optional)</Label>
+            
             <div 
               onClick={() => thumbnailInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 flex flex-col items-center justify-center h-[200px] cursor-pointer hover:bg-gray-100 transition-colors overflow-hidden relative w-[112px] mx-auto"
+              className="border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 flex flex-col items-center justify-center h-[400px] cursor-pointer hover:bg-gray-100 transition-colors overflow-hidden relative w-[225px] shadow-md"
             >
               <input 
                 type="file" 
@@ -187,7 +256,7 @@ export default function AddReelPage() {
                 onChange={handleThumbnailChange}
               />
               {thumbnailPreview ? (
-                <Image src={thumbnailPreview} alt="Thumbnail preview" fill className="object-cover" />
+                <img src={thumbnailPreview} alt="Thumbnail preview" className="object-cover w-full h-full absolute inset-0" />
               ) : (
                 <>
                   <Upload className="w-8 h-8 text-[#E0202B] mb-2" />
@@ -195,7 +264,7 @@ export default function AddReelPage() {
                 </>
               )}
             </div>
-            <p className="text-sm text-gray-500 mt-1 text-center">Recommended dimensions: 1080x1920px (9:16 ratio)</p>
+            <p className="text-sm text-gray-500 mt-1">Recommended dimensions: 1080x1920px (9:16 ratio)</p>
           </div>
 
         </div>

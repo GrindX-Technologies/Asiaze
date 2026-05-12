@@ -14,6 +14,10 @@ import uploadRoutes from './routes/uploadRoutes';
 import settingRoutes from './routes/settingRoutes';
 import couponRoutes from './routes/couponRoutes';
 import storyRoutes from './routes/storyRoutes';
+import tagRoutes from './routes/tagRoutes';
+
+// Models
+import './models/Tag';
 
 dotenv.config();
 
@@ -37,8 +41,9 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/stories', storyRoutes);
+app.use('/api/tags', tagRoutes);
 
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.use('/api/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Base Route
 app.get('/', (req: Request, res: Response) => {

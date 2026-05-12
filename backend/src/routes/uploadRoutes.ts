@@ -42,6 +42,7 @@ function checkFileType(file: Express.Multer.File, cb: multer.FileFilterCallback)
 
 const upload = multer({
   storage,
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit to safely allow reels
   fileFilter: function (req, file, cb) {
     checkFileType(file, cb);
   },
@@ -51,7 +52,7 @@ router.post('/', protect, upload.single('file'), async (req: Request, res: Respo
   if (req.file) {
     try {
       const userId = (req as any).user?._id?.toString() || 'anonymous';
-      const fileUrl = `/uploads/${userId}/${req.file.filename}`;
+      const fileUrl = `/api/uploads/${userId}/${req.file.filename}`;
       
       // Store in Data Collection
       if (userId !== 'anonymous') {

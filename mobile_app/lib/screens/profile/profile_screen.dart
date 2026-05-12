@@ -6,6 +6,7 @@ import '../../services/api_service.dart';
 import '../../constants/states.dart';
 import '../auth/login_screen.dart';
 import 'saved_articles_screen.dart';
+import 'saved_reels_screen.dart';
 import 'rewards_screen.dart';
 import 'settings_screen.dart';
 import 'edit_profile_screen.dart';
@@ -304,6 +305,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const SavedArticlesScreen()),
+                );
+              },
+            ),
+            const Divider(height: 1, color: Color(0xFFE2E8F0)),
+            _buildMenuItem(
+              icon: Icons.video_library,
+              title: 'Saved Reels',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SavedReelsScreen()),
                 );
               },
             ),

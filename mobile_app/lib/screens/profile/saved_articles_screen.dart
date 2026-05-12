@@ -1,30 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/regular_news_card.dart';
+import '../../services/saved_articles_service.dart';
+import '../home/article_detail_screen.dart';
 
-class SavedArticlesScreen extends StatelessWidget {
+class SavedArticlesScreen extends StatefulWidget {
   const SavedArticlesScreen({super.key});
 
-  final List<Map<String, dynamic>> _savedData = const [
-    {
-      'id': '1',
-      'title': 'Breaking News: Major Event Unfolds',
-      'excerpt': 'This is a preview of the article content, providing a glimpse into the full story. Stay tuned for more details...',
-      'meta': '',
-    },
-    {
-      'id': '2',
-      'title': 'In-Depth Analysis: Economic Trends',
-      'excerpt': 'Explore the latest insights and trends in the economic sector. This article dives deep into...',
-      'meta': '',
-    },
-    {
-      'id': '3',
-      'title': 'Lifestyle: Tips for a Healthier Living',
-      'excerpt': 'Discover simple yet effective strategies to enhance your lifestyle and well-being in this comprehensive guide...',
-      'meta': '',
-    },
-  ];
+  @override
+  State<SavedArticlesScreen> createState() => _SavedArticlesScreenState();
+}
+
+class _SavedArticlesScreenState extends State<SavedArticlesScreen> {
+  List<Map<String, dynamic>> _savedData = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedArticles();
+  }
+
+  Future<void> _loadSavedArticles() async {
+    final articles = await SavedArticlesService.getSavedArticles();
+    if (mounted) {
+      setState(() {
+        _savedData = articles;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +56,9 @@ class SavedArticlesScreen extends StatelessWidget {
           child: Divider(height: 1, color: Color(0xFFE2E8F0)),
         ),
       ),
-      body: _savedData.isEmpty
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFFDC143C)))
+          : _savedData.isEmpty
           ? _buildEmptyState()
           : ListView.builder(
               padding: const EdgeInsets.only(top: 8, bottom: 24),
@@ -60,7 +67,14 @@ class SavedArticlesScreen extends StatelessWidget {
                 return RegularNewsCard(
                   article: _savedData[index],
                   onTap: () {
-                    // Navigate to detail
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ArticleDetailScreen(
+                          article: _savedData[index],
+                        ),
+                      ),
+                    ).then((_) => _loadSavedArticles()); // Refresh list when returning
                   },
                 );
               },

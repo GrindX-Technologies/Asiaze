@@ -57,18 +57,35 @@ export default function DashboardPage() {
   const token = useToken();
 
   useEffect(() => {
+    const getCookieToken = () => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; token=`);
+      if (parts.length === 2) return parts.pop()?.split(";").shift() || "";
+      return "";
+    };
+
     // Fetch stats and lists from the backend API
     const fetchData = async () => {
       try {
         setFetchError(null);
-        
+        const authToken = token || getCookieToken();
+        if (!authToken) {
+          setFetchError("Unauthorized. Your session may have expired.");
+          return;
+        }
+
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
         
         const [newsRes, reelsRes, usersRes] = await Promise.all([
-          fetch(`${apiUrl}/api/news`, { headers: { Authorization: `Bearer ${token}` } }),
-          fetch(`${apiUrl}/api/reels`, { headers: { Authorization: `Bearer ${token}` } }),
-          fetch(`${apiUrl}/api/users`, { headers: { Authorization: `Bearer ${token}` } })
+          fetch(`${apiUrl}/api/news`, { headers: { Authorization: `Bearer ${authToken}` } }),
+          fetch(`${apiUrl}/api/reels`, { headers: { Authorization: `Bearer ${authToken}` } }),
+          fetch(`${apiUrl}/api/users`, { headers: { Authorization: `Bearer ${authToken}` } })
         ]);
+
+        if (newsRes.status === 401 || reelsRes.status === 401 || usersRes.status === 401) {
+           setFetchError("Unauthorized. Your session may have expired.");
+           return;
+        }
 
         const newsData = newsRes.ok ? await newsRes.json() : [];
         const reelsData = reelsRes.ok ? await reelsRes.json() : [];

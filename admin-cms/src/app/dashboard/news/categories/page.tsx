@@ -10,9 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Pencil, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useToken } from "@/components/TokenProvider";
 
 export default function CategoriesPage() {
   const router = useRouter();
+  const token = useToken();
   const [categories, setCategories] = useState<any[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -21,22 +23,15 @@ export default function CategoriesPage() {
   
   // Form states
   const [name, setName] = useState("");
-  const [labels, setLabels] = useState("");
-
-  const getCookie = (name: string) => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop()?.split(';').shift();
-    return "";
-  };
+  const [description, setDescription] = useState("");
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch("/api/categories", {
-        headers: { Authorization: `Bearer ${getCookie("token")}` }
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/categories`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (res.status === 401) {
-        router.push("/");
+        setError("Unauthorized to fetch categories. Please log in again.");
         return;
       }
       if (res.ok) {
@@ -49,34 +44,33 @@ export default function CategoriesPage() {
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      await fetchCategories();
-    };
-    loadData();
-  }, []);
+    if (token) {
+      fetchCategories();
+    }
+  }, [token]);
 
   const handleAddCategory = async () => {
     setError(null);
     try {
       const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const res = await fetch("/api/categories", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/categories`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          Authorization: `Bearer ${getCookie("token")}` 
+          Authorization: `Bearer ${token}` 
         },
-        body: JSON.stringify({ name, slug, description: labels, status: "active" })
+        body: JSON.stringify({ name, slug, description, status: "active" })
       });
       
       if (res.status === 401) {
-        router.push("/");
+        setError("Unauthorized to add category. Your session may have expired.");
         return;
       }
 
       if (res.ok) {
         setIsAddModalOpen(false);
         setName("");
-        setLabels("");
+        setDescription("");
         fetchCategories();
       } else {
         const err = await res.json();
@@ -93,17 +87,17 @@ export default function CategoriesPage() {
     setError(null);
     try {
       const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const res = await fetch(`/api/categories/${editingCategory._id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/categories/${editingCategory._id}`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",
-          Authorization: `Bearer ${getCookie("token")}` 
+          Authorization: `Bearer ${token}` 
         },
-        body: JSON.stringify({ name, slug, description: labels })
+        body: JSON.stringify({ name, slug, description })
       });
       
       if (res.status === 401) {
-        router.push("/");
+        setError("Unauthorized to update category. Your session may have expired.");
         return;
       }
 
@@ -124,12 +118,12 @@ export default function CategoriesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this category?")) return;
     try {
-      const res = await fetch(`/api/categories/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/categories/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${getCookie("token")}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (res.status === 401) {
-        router.push("/");
+        setError("Unauthorized to delete category.");
         return;
       }
       if (res.ok) {
@@ -143,16 +137,16 @@ export default function CategoriesPage() {
   const toggleVisibility = async (cat: any) => {
     const newStatus = cat.status === "active" ? "inactive" : "active";
     try {
-      const res = await fetch(`/api/categories/${cat._id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/categories/${cat._id}`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",
-          Authorization: `Bearer ${getCookie("token")}` 
+          Authorization: `Bearer ${token}` 
         },
         body: JSON.stringify({ status: newStatus })
       });
       if (res.status === 401) {
-        router.push("/");
+        setError("Unauthorized to toggle visibility.");
         return;
       }
       if (res.ok) {
@@ -166,7 +160,7 @@ export default function CategoriesPage() {
   const openAddModal = () => {
     setError(null);
     setName("");
-    setLabels("");
+    setDescription("");
     setIsAddModalOpen(true);
   };
 
@@ -174,7 +168,7 @@ export default function CategoriesPage() {
     setError(null);
     setEditingCategory(cat);
     setName(cat.name);
-    setLabels(cat.description || "");
+    setDescription(cat.description || "");
     setIsEditModalOpen(true);
   };
 
@@ -214,13 +208,13 @@ export default function CategoriesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="labels" className="text-black font-bold">Language Labels</Label>
+                <Label htmlFor="description" className="text-black font-bold">Category Description <span className="text-gray-400 font-normal">(Optional)</span></Label>
                 <Input
-                  id="labels"
-                  placeholder="Enter language labels"
+                  id="description"
+                  placeholder="Enter category description"
                   className="bg-white border-gray-200"
-                  value={labels}
-                  onChange={(e) => setLabels(e.target.value)}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
               <div className="flex justify-end pt-2">
@@ -259,11 +253,11 @@ export default function CategoriesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-labels" className="text-black font-bold">Language Labels</Label>
+                <Label htmlFor="edit-description" className="text-black font-bold">Category Description <span className="text-gray-400 font-normal">(Optional)</span></Label>
                 <Input
-                  id="edit-labels"
-                  value={labels}
-                  onChange={(e) => setLabels(e.target.value)}
+                  id="edit-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   className="bg-white border-gray-200"
                 />
               </div>
@@ -286,7 +280,7 @@ export default function CategoriesPage() {
           <TableHeader className="bg-[#F9FAFB]">
             <TableRow className="hover:bg-transparent">
               <TableHead className="font-bold text-black py-4">Category Name</TableHead>
-              <TableHead className="font-bold text-black">Language Labels</TableHead>
+              <TableHead className="font-bold text-black">Category Description</TableHead>
               <TableHead className="font-bold text-black">Status</TableHead>
               <TableHead className="font-bold text-black text-center">Visibility</TableHead>
               <TableHead className="font-bold text-black text-right pr-6">Actions</TableHead>
@@ -296,7 +290,7 @@ export default function CategoriesPage() {
             {categories.map((cat) => (
               <TableRow key={cat._id || cat.id}>
                 <TableCell className="font-medium text-gray-900 py-4">{cat.name}</TableCell>
-                <TableCell className="text-gray-900">{cat.description || cat.labels}</TableCell>
+                <TableCell className="text-gray-900">{cat.description}</TableCell>
                 <TableCell>
                   <Badge 
                     className={`text-white border-none rounded-full px-4 py-1 font-normal ${

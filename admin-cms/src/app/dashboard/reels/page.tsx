@@ -16,6 +16,7 @@ export default function ReelsListPage() {
   const [selectedReels, setSelectedReels] = useState<string[]>([]);
 
   const toggleSelectAll = () => {
+    if (!Array.isArray(reelsData)) return;
     if (selectedReels.length === reelsData.length) {
       setSelectedReels([]);
     } else {
@@ -41,12 +42,14 @@ export default function ReelsListPage() {
           return "";
         };
         const token = getCookie("token");
-        const res = await fetch("/api/reels", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/reels?status=all`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
           const data = await res.json();
-          setReelsData(data);
+          setReelsData(Array.isArray(data) ? data : []);
+        } else {
+          setReelsData([]);
         }
       } catch (err) {
         console.error(err);
@@ -120,7 +123,7 @@ export default function ReelsListPage() {
               <TableHead className="w-[40px] py-4">
                 <Checkbox 
                   className="ml-2 border-gray-300" 
-                  checked={selectedReels.length > 0 && selectedReels.length === reelsData.length}
+                  checked={selectedReels.length > 0 && Array.isArray(reelsData) && selectedReels.length === reelsData.length}
                   onCheckedChange={toggleSelectAll}
                 />
               </TableHead>
@@ -137,14 +140,14 @@ export default function ReelsListPage() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">Loading...</TableCell>
+                <TableCell colSpan={9} className="text-center py-8">Loading...</TableCell>
               </TableRow>
             ) : reelsData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">No reels found.</TableCell>
+                <TableCell colSpan={9} className="text-center py-8">No reels found.</TableCell>
               </TableRow>
             ) : (
-              reelsData.map((item) => (
+              Array.isArray(reelsData) && reelsData.map((item) => (
                 <TableRow key={item._id} className="border-b border-gray-50">
                   <TableCell className="py-4">
                     <Checkbox 

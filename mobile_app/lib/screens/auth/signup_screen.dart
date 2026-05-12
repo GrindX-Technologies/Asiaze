@@ -167,7 +167,7 @@ class _SignupScreenState extends State<SignupScreen> {
               const SizedBox(height: 16),
               // State Dropdown
               DropdownButtonFormField<String>(
-                value: _selectedState,
+                initialValue: _selectedState,
                 hint: Text(
                   'Select your State',
                   style: GoogleFonts.lexendDeca(

@@ -13,6 +13,16 @@ export const getSettings = async (req: Request, res: Response): Promise<void> =>
 export const updateSetting = async (req: Request, res: Response): Promise<void> => {
   try {
     const { key, value, group, description } = req.body;
+    
+    // Validate Points Settings (Edge Case Testing: Max points, negative points)
+    if (key === 'points_for_sharing' || key === 'pointsPerReferral') {
+      const numericValue = Number(value);
+      if (isNaN(numericValue) || numericValue < 0 || numericValue > 100000) {
+        res.status(400).json({ message: 'Points value must be a valid number between 0 and 100,000' });
+        return;
+      }
+    }
+
     let setting = await Setting.findOne({ key });
 
     if (setting) {
