@@ -78,6 +78,17 @@ export default function AddNewsPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!validTypes.includes(file.type)) {
+        alert("Invalid file format. Please upload a supported image format: JPEG, JPG, PNG, or GIF. WebP, AVIF and other formats are not supported by the mobile app.");
+        if (imageInputRef.current) {
+          imageInputRef.current.value = '';
+        }
+        return;
+      }
+      
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
@@ -337,7 +348,7 @@ export default function AddNewsPage() {
               >
                 <input 
                   type="file" 
-                  accept="image/*" 
+                  accept="image/jpeg, image/jpg, image/png, image/gif" 
                   className="hidden" 
                   ref={imageInputRef}
                   onChange={handleImageChange}
@@ -347,7 +358,8 @@ export default function AddNewsPage() {
                 ) : (
                   <>
                     <Upload className="w-10 h-10 text-gray-400 mb-3" />
-                    <span className="text-gray-500 font-medium">Click to Upload/Replace Image</span>
+                    <span className="text-gray-500 font-medium text-center">Click to Upload/Replace Image</span>
+                    <span className="text-gray-400 text-xs mt-2 text-center">Supported: JPEG, JPG, PNG, GIF<br/>(AVIF/WebP not supported)</span>
                   </>
                 )}
               </div>

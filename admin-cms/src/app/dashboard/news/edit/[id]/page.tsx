@@ -389,14 +389,25 @@ export default function EditNewsPage() {
                   </div>
                 )}
               </div>
+              <p className="text-sm text-gray-500 mt-2 mb-2">Supported: JPEG, JPG, PNG, GIF<br/>(AVIF/WebP not supported)</p>
               <input 
                 type="file" 
-                ref={fileInputRef} 
+                accept="image/jpeg, image/jpg, image/png, image/gif" 
                 className="hidden" 
-                accept="image/*"
+                ref={fileInputRef}
                 onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {
-                    setNewImage(e.target.files[0]);
+                    const file = e.target.files[0];
+                    // Validate file type
+                    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                    if (!validTypes.includes(file.type)) {
+                      alert("Invalid file format. Please upload a supported image format: JPEG, JPG, PNG, or GIF. WebP, AVIF and other formats are not supported by the mobile app.");
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                      }
+                      return;
+                    }
+                    setNewImage(file);
                   }
                 }}
               />
