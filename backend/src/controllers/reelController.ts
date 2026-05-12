@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import Reel from '../models/Reel';
 
+import User from '../models/User';
+
 // @desc    Get all reels
 // @route   GET /api/reels
 // @access  Public
@@ -122,10 +124,12 @@ export const toggleLikeReel = async (req: Request, res: Response): Promise<void>
       // User already liked it, so unlike it
       reel.likedBy.splice(isLikedIndex, 1);
       reel.likes = Math.max(0, (reel.likes || 0) - 1);
+      await User.findByIdAndUpdate(userId, { $pull: { likedReels: reel._id } });
     } else {
       // User hasn't liked it, so like it
       reel.likedBy.push(userId);
       reel.likes = (reel.likes || 0) + 1;
+      await User.findByIdAndUpdate(userId, { $addToSet: { likedReels: reel._id } });
     }
 
     const updatedReel = await reel.save();

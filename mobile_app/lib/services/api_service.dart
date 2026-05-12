@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -38,6 +39,10 @@ class ApiService {
       if (data['preferredCategories'] != null) {
         await prefs.setStringList('selectedCategories', List<String>.from(data['preferredCategories']));
       }
+      
+      // Sync user activity (saved/liked items)
+      await syncUserActivity();
+      
       return data;
     } else {
       throw Exception(jsonDecode(response.body)['message'] ?? 'Login failed');
@@ -65,6 +70,10 @@ class ApiService {
       if (data['preferredCategories'] != null) {
         await prefs.setStringList('selectedCategories', List<String>.from(data['preferredCategories']));
       }
+      
+      // Sync user activity (saved/liked items)
+      await syncUserActivity();
+      
       return data;
     } else {
       throw Exception(jsonDecode(response.body)['message'] ?? 'Google Login failed');
@@ -96,6 +105,58 @@ class ApiService {
     }
   }
 
+  static Future<void> syncUserActivity() async {
+    try {
+      final profile = await getProfile();
+      final prefs = await SharedPreferences.getInstance();
+
+      // Sync liked articles
+      if (profile['likedNews'] != null) {
+        List<String> likedNews = (profile['likedNews'] as List).map((e) => e.toString()).toList();
+        await prefs.setStringList('likedArticles', likedNews);
+      }
+
+      // Sync liked reels
+      if (profile['likedReels'] != null) {
+        List<String> likedReels = (profile['likedReels'] as List).map((e) => e.toString()).toList();
+        await prefs.setStringList('likedReels', likedReels);
+      }
+
+      // Sync saved articles
+      if (profile['savedNews'] != null) {
+        List<Map<String, dynamic>> savedArticles = (profile['savedNews'] as List).map((item) {
+          return {
+            'id': item['_id']?.toString() ?? '',
+            'title': item['title'] ?? 'No Title',
+            'excerpt': item['summary'] ?? item['content'] ?? 'No Description',
+            'meta': '${item['createdAt'] != null ? DateTime.parse(item['createdAt']).toLocal().toString().split(' ')[0] : ''} | ${item['source'] ?? 'ASIAZE'}',
+            'coverImage': item['coverImage'],
+            'content': item['content'] ?? '',
+          };
+        }).toList();
+        await prefs.setString('saved_articles', jsonEncode(savedArticles));
+      }
+
+      // Sync saved reels
+      if (profile['savedReels'] != null) {
+        List<Map<String, dynamic>> savedReels = (profile['savedReels'] as List).map((item) {
+          return {
+            'id': item['_id']?.toString() ?? '',
+            'videoUrl': item['videoUrl'],
+            'thumbnailUrl': item['thumbnailUrl'],
+            'title': item['title'],
+            'description': item['description'],
+            'likes': item['likes'] ?? 0,
+            'comments': item['comments'] ?? 0,
+            'shares': item['shares'] ?? 0,
+          };
+        }).toList();
+        await prefs.setString('saved_reels', jsonEncode(savedReels));
+      }
+    } catch (e) {
+      debugPrint("Failed to sync user activity: $e");
+    }
+  }
   static Future<Map<String, dynamic>> getProfile() async {
     final token = await getToken();
     final response = await http.get(
@@ -312,6 +373,38 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to toggle like');
+    }
+  }
+
+  static Future<Map<String, dynamic>> toggleSaveNews(String newsId) async {
+    final token = await getToken();
+    final response = await http.put(
+      Uri.parse('$baseUrl/auth/save/news/$newsId'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token'
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to toggle save news');
+    }
+  }
+
+  static Future<Map<String, dynamic>> toggleSaveReel(String reelId) async {
+    final token = await getToken();
+    final response = await http.put(
+      Uri.parse('$baseUrl/auth/save/reels/$reelId'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token'
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to toggle save reel');
     }
   }
 

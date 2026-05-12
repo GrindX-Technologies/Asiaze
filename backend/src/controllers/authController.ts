@@ -243,7 +243,11 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
 export const getProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     // req.user will be populated by authMiddleware
-    const user = await User.findById((req as any).user._id).select('-password').populate('preferredCategories');
+    const user = await User.findById((req as any).user._id)
+      .select('-password')
+      .populate('preferredCategories')
+      .populate('savedNews')
+      .populate('savedReels');
     
     if (user) {
       const userData = user.toObject();
@@ -274,6 +278,56 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     // In a real application, you would generate a reset token and send an email here.
     // For now, we'll mock the success response.
     res.json({ message: 'If that email address is in our database, we will send you an email to reset your password.' });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const toggleSaveNews = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).user._id;
+    const newsId = req.params.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    const isSaved = user.savedNews.includes(newsId as any);
+    if (isSaved) {
+      user.savedNews = user.savedNews.filter(id => id.toString() !== newsId);
+    } else {
+      user.savedNews.push(newsId as any);
+    }
+    
+    await user.save();
+    res.json({ isSaved: !isSaved, savedNews: user.savedNews });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const toggleSaveReel = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).user._id;
+    const reelId = req.params.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    const isSaved = user.savedReels.includes(reelId as any);
+    if (isSaved) {
+      user.savedReels = user.savedReels.filter(id => id.toString() !== reelId);
+    } else {
+      user.savedReels.push(reelId as any);
+    }
+    
+    await user.save();
+    res.json({ isSaved: !isSaved, savedReels: user.savedReels });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'api_service.dart';
 
 class SavedReelsService {
   static const String _key = 'saved_reels';
@@ -21,6 +23,13 @@ class SavedReelsService {
     
     reels.insert(0, reel);
     await prefs.setString(_key, jsonEncode(reels));
+    
+    // Sync to backend
+    try {
+      await ApiService.toggleSaveReel(reel['id'] ?? reel['_id'] ?? '');
+    } catch (e) {
+      debugPrint("Failed to sync save reel to backend: $e");
+    }
   }
 
   static Future<void> removeReel(String id) async {
@@ -29,6 +38,13 @@ class SavedReelsService {
     
     reels.removeWhere((r) => r['id'] == id);
     await prefs.setString(_key, jsonEncode(reels));
+    
+    // Sync to backend
+    try {
+      await ApiService.toggleSaveReel(id);
+    } catch (e) {
+      debugPrint("Failed to sync remove reel to backend: $e");
+    }
   }
 
   static Future<bool> isSaved(String id) async {

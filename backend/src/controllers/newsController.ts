@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import News from '../models/News';
 
+import User from '../models/User';
+
 // @desc    Get all news
 // @route   GET /api/news
 // @access  Public
@@ -145,10 +147,12 @@ export const toggleLikeNews = async (req: Request, res: Response): Promise<void>
       // User already liked it, so unlike it
       news.likedBy.splice(isLikedIndex, 1);
       news.likes = Math.max(0, (news.likes || 0) - 1);
+      await User.findByIdAndUpdate(userId, { $pull: { likedNews: news._id } });
     } else {
       // User hasn't liked it, so like it
       news.likedBy.push(userId);
       news.likes = (news.likes || 0) + 1;
+      await User.findByIdAndUpdate(userId, { $addToSet: { likedNews: news._id } });
     }
 
     const updatedNews = await news.save();

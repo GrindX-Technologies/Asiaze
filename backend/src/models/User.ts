@@ -15,6 +15,10 @@ export interface IUser extends Document {
   points: number;
   isBlocked: boolean;
   deviceToken?: string;
+  savedNews: mongoose.Types.ObjectId[];
+  savedReels: mongoose.Types.ObjectId[];
+  likedNews: mongoose.Types.ObjectId[];
+  likedReels: mongoose.Types.ObjectId[];
   loginHistory: Array<{
     ip: string;
     device: string;
@@ -40,6 +44,10 @@ const userSchema = new Schema(
     points: { type: Number, default: 0 },
     isBlocked: { type: Boolean, default: false },
     deviceToken: { type: String },
+    savedNews: [{ type: Schema.Types.ObjectId, ref: 'News' }],
+    savedReels: [{ type: Schema.Types.ObjectId, ref: 'Reel' }],
+    likedNews: [{ type: Schema.Types.ObjectId, ref: 'News' }],
+    likedReels: [{ type: Schema.Types.ObjectId, ref: 'Reel' }],
     loginHistory: [
       {
         ip: { type: String },

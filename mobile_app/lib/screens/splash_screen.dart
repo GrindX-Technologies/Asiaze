@@ -26,6 +26,13 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (token != null && token.isNotEmpty) {
+      try {
+        await ApiService.syncUserActivity();
+      } catch (e) {
+        debugPrint("Error syncing user activity on startup: \$e");
+      }
+      if (!mounted) return;
+      
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
