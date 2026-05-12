@@ -70,12 +70,14 @@ export default function ViewStoryPage() {
         {currentPage ? (
           <>
             <div className="absolute inset-0 flex items-center justify-center">
-              <Image 
-                src={currentPage.imageUrl.startsWith('http') ? currentPage.imageUrl : `https://asiaze.cloud${currentPage.imageUrl}`}
-                alt="Story preview"
-                fill
-                className="object-cover opacity-80"
-              />
+              {currentPage.imageUrl && (
+                <Image 
+                  src={currentPage.imageUrl.startsWith('http') ? currentPage.imageUrl : (currentPage.imageUrl.startsWith('/api/uploads/') ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${currentPage.imageUrl}` : `https://asiaze.cloud${currentPage.imageUrl}`)}
+                  alt="Story preview"
+                  fill
+                  className="object-cover opacity-80"
+                />
+              )}
             </div>
 
             {/* Top actions */}

@@ -77,6 +77,9 @@ class _StoriesScreenState extends State<StoriesScreen> {
       
       List<StoryGroupData> mappedStories = [];
       for (var group in data) {
+        // Double check status client-side to ensure draft stories are never displayed
+        if (group['status'] == 'draft') continue;
+
         List<StoryPageData> mappedPages = [];
         
         for (var page in group['pages']) {

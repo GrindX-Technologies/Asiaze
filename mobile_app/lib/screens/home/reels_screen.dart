@@ -219,7 +219,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
   void initState() {
     super.initState();
     
-    _likeCount = widget.reel['likes'] ?? 0;
+    _likeCount = int.tryParse(widget.reel['likes'].toString()) ?? 0;
     
     _saveAnimController = AnimationController(
       vsync: this,
@@ -312,7 +312,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
 
       if (mounted && response['likes'] != null) {
         setState(() {
-          _likeCount = response['likes'];
+          _likeCount = int.tryParse(response['likes'].toString()) ?? _likeCount;
         });
       }
     } catch (e) {
@@ -355,7 +355,8 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
 
   Future<void> _initializeVideo() async {
     if (widget.reel['videoUrl'] != null && widget.reel['videoUrl'].isNotEmpty) {
-      final url = 'https://asiaze.cloud${widget.reel['videoUrl']}';
+      String videoUrl = widget.reel['videoUrl'];
+      final url = videoUrl.startsWith('http') ? videoUrl : 'https://asiaze.cloud$videoUrl';
       _controller = VideoPlayerController.networkUrl(Uri.parse(url))
         ..setLooping(true)
         ..initialize().then((_) {
@@ -363,6 +364,8 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
             setState(() {});
             _controller?.play();
           }
+        }).catchError((e) {
+          debugPrint("Video initialization error: $e");
         });
     }
   }
@@ -412,8 +415,13 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
                   children: [
                     if (widget.reel['thumbnailUrl'] != null && widget.reel['thumbnailUrl'].isNotEmpty)
                       Image.network(
-                        'https://asiaze.cloud${widget.reel['thumbnailUrl']}',
+                        widget.reel['thumbnailUrl'].toString().startsWith('http') 
+                          ? widget.reel['thumbnailUrl'] 
+                          : 'https://asiaze.cloud${widget.reel['thumbnailUrl']}',
                         fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(child: Icon(Icons.broken_image, color: Colors.white54, size: 50));
+                        },
                       ),
                     const Center(
                       child: CircularProgressIndicator(color: Colors.white54),

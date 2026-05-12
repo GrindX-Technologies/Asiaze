@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 
@@ -16,6 +17,7 @@ export default function EditStoryPage() {
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("General");
+  const [status, setStatus] = useState("published");
   const [pages, setPages] = useState([{ title: "", description: "", imageFile: null as File | null, imagePreview: "" }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -36,13 +38,27 @@ export default function EditStoryPage() {
       .then(data => {
         setTitle(data.title || "");
         setCategory(data.category || "General");
+        setStatus(data.status || "published");
         if (data.pages && data.pages.length > 0) {
-          setPages(data.pages.map((p: any) => ({
-            title: p.title || "",
-            description: p.description || "",
-            imageFile: null,
-            imagePreview: p.imageUrl ? `https://asiaze.cloud${p.imageUrl}` : ""
-          })));
+          setPages(data.pages.map((p: any) => {
+            let previewUrl = "";
+            if (p.imageUrl) {
+              if (p.imageUrl.startsWith("http")) {
+                previewUrl = p.imageUrl;
+              } else if (p.imageUrl.startsWith("/api/uploads/")) {
+                // If it's a relative API upload URL, prepend the backend host
+                previewUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${p.imageUrl}`;
+              } else {
+                previewUrl = `https://asiaze.cloud${p.imageUrl}`;
+              }
+            }
+            return {
+              title: p.title || "",
+              description: p.description || "",
+              imageFile: null,
+              imagePreview: previewUrl
+            };
+          }));
         }
       })
       .catch(err => console.error("Failed to load story", err));
@@ -113,8 +129,11 @@ export default function EditStoryPage() {
     setPages(newPages);
   };
 
-  const handleSubmit = async (e: React.FormEvent, status: "published" | "draft" = "published") => {
+  const handleSubmit = async (e: React.FormEvent, submitStatus?: "published" | "draft") => {
     e.preventDefault();
+    
+    const finalStatus = submitStatus || status;
+
     if (!title) {
       alert("Story Group Title is required");
       return;
@@ -137,7 +156,16 @@ export default function EditStoryPage() {
     try {
       // Upload all new images
       const uploadedPages = await Promise.all(pages.map(async (page) => {
-        let imageUrl = page.imagePreview.replace("https://asiaze.cloud", ""); // reuse existing relative URL
+        let imageUrl = page.imagePreview;
+        
+        // If imagePreview is a full URL pointing to our backend, strip it back to relative
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        if (imageUrl.startsWith(apiUrl)) {
+          imageUrl = imageUrl.replace(apiUrl, "");
+        } else if (imageUrl.startsWith("https://asiaze.cloud")) {
+          imageUrl = imageUrl.replace("https://asiaze.cloud", "");
+        }
+
         if (page.imageFile) {
           imageUrl = await uploadFile(page.imageFile);
         }
@@ -159,7 +187,7 @@ export default function EditStoryPage() {
           title,
           category,
           pages: uploadedPages,
-          status
+          status: finalStatus
         })
       });
 
@@ -183,13 +211,13 @@ export default function EditStoryPage() {
   };
 
   return (
-    <form onSubmit={(e) => handleSubmit(e, "published")} className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-[1200px]">
+    <form onSubmit={(e) => handleSubmit(e)} className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-[1200px]">
       <div className="space-y-8">
         
         {/* Story Group Details */}
         <div className="space-y-6 pb-6 border-b border-gray-200">
           <h3 className="text-xl font-bold">Story Group Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label className="text-black font-bold text-base">Story Group Name</Label>
               <Input 
@@ -209,6 +237,18 @@ export default function EditStoryPage() {
                 onChange={(e) => setCategory(e.target.value)}
                 required
               />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-black font-bold text-base">Status</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-full bg-white border-gray-200 h-12">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
@@ -333,7 +373,7 @@ export default function EditStoryPage() {
         <Button 
           type="submit"
           disabled={isSubmitting}
-          onClick={(e) => handleSubmit(e, "published")}
+          onClick={(e) => handleSubmit(e)}
           className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full px-8 font-bold"
         >
           {isSubmitting ? "Saving..." : "Save Changes"}
