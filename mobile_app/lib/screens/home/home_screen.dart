@@ -167,6 +167,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       
       List<dynamic> mappedData = [];
       for (var item in data) {
+        if (item['status'] == 'draft') continue;
+
         String title = item['title'] ?? 'No Title';
         String excerpt = item['summary'] ?? item['content'] ?? 'No Description';
         String content = item['content'] ?? '';

@@ -17,20 +17,14 @@ class SearchExploreScreen extends StatefulWidget {
 class _SearchExploreScreenState extends State<SearchExploreScreen> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
-  String _activeTab = 'My State';
+  String _activeTab = 'All News';
   bool _isLoading = true;
   String _langCode = 'EN';
   String? _userState;
   String _searchQuery = '';
 
-  final List<String> _tabs = [
-    'My State',
-    'Sports',
-    'Business',
-    'Technology',
-    'Politics',
-  ];
-
+  List<String> _tabs = ['All News', 'My State'];
+  final Map<String, String> _categoryNameToId = {};
   Map<String, String> _translatedToEnglishTabs = {};
 
   List<dynamic> _allData = [];
@@ -59,6 +53,19 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
       _userState = prefs.getString('userState');
     });
 
+    try {
+      final categories = await ApiService.getCategories();
+      List<String> dynamicTabs = [];
+      for (var cat in categories) {
+        String name = cat['name'];
+        _categoryNameToId[name] = cat['_id'];
+        dynamicTabs.add(name);
+      }
+      _tabs = ['All News', 'My State', ...dynamicTabs];
+    } catch (e) {
+      debugPrint('Failed to load categories: $e');
+    }
+
     Map<String, String> translatedToEnglish = {};
     for (String tab in _tabs) {
       translatedToEnglish[tab] = tab;
@@ -74,8 +81,9 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
         translatedTabs.add(translated);
         translatedToEnglish[translated] = tab;
       }
-      _tabs.clear();
-      _tabs.addAll(translatedTabs);
+      _tabs = translatedTabs;
+      _activeTab = _tabs[0];
+    } else {
       _activeTab = _tabs[0];
     }
     
@@ -92,10 +100,14 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
       String apiQueryCategory = '';
       String englishTab = _translatedToEnglishTabs[_activeTab] ?? _activeTab;
 
-      if (_userState != null && (englishTab == 'My State' || englishTab == 'Local')) {
-        apiQueryState = _userState!;
-      } else if (englishTab != 'My State' && englishTab != 'Local') {
-        apiQueryCategory = englishTab;
+      if (englishTab == 'My State' || englishTab == 'Local') {
+        if (_userState != null) {
+          apiQueryState = _userState!;
+        }
+      } else if (englishTab != 'All News') {
+        if (_categoryNameToId.containsKey(englishTab)) {
+          apiQueryCategory = _categoryNameToId[englishTab]!;
+        }
       }
 
       final data = await ApiService.getNews(
@@ -105,9 +117,15 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
       
       List<dynamic> mappedData = [];
       for (var item in data) {
+        if (item['status'] == 'draft') continue;
+
         String title = item['title'] ?? 'No Title';
         String excerpt = item['summary'] ?? item['content'] ?? 'No Description';
         String content = item['content'] ?? '';
+        String categoryName = '';
+        if (item['category'] != null && item['category'] is Map) {
+          categoryName = item['category']['name'] ?? '';
+        }
         
         if (_langCode != 'EN') {
           title = await TranslationService.translateText(title, _langCode);
@@ -122,6 +140,7 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
           'meta': '${_formatDate(item['createdAt'])} | ${item['source'] ?? 'ASIAZE'}',
           'coverImage': item['coverImage'],
           'content': content,
+          'categoryName': categoryName,
         });
       }
       

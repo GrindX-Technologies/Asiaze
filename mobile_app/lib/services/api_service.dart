@@ -218,7 +218,7 @@ class ApiService {
   static Future<List<dynamic>> getNews({String? state, String? category}) async {
     final token = await getToken();
     
-    List<String> queryParams = [];
+    List<String> queryParams = ['status=published'];
     if (state != null && state.isNotEmpty) {
       queryParams.add('state=${Uri.encodeComponent(state)}');
     }
