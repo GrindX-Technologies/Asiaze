@@ -29,7 +29,7 @@ export default function EditStoryPage() {
   useEffect(() => {
     if (storyId) {
       const token = getCookie("token");
-      fetch(`/api/stories/${storyId}`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/stories/${storyId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then(res => res.json())
@@ -53,8 +53,12 @@ export default function EditStoryPage() {
     const formData = new FormData();
     formData.append("file", file);
 
+    const token = getCookie("token");
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/upload`, {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
       body: formData,
     });
 
@@ -96,6 +100,11 @@ export default function EditStoryPage() {
       return;
     }
     
+    if (!category) {
+      alert("Category is required");
+      return;
+    }
+    
     // Validate pages
     for (let i = 0; i < pages.length; i++) {
       if (!pages[i].imagePreview || !pages[i].title || !pages[i].description) {
@@ -120,7 +129,7 @@ export default function EditStoryPage() {
       }));
 
       const token = getCookie("token");
-      const res = await fetch(`/api/stories/${storyId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/stories/${storyId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

@@ -47,8 +47,12 @@ export default function AddStoryPage() {
     const formData = new FormData();
     formData.append("file", file);
 
+    const token = getCookie("token");
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/upload`, {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
       body: formData,
     });
 
@@ -87,6 +91,11 @@ export default function AddStoryPage() {
     e.preventDefault();
     if (!title) {
       alert("Story Group Title is required");
+      return;
+    }
+    
+    if (!category) {
+      alert("Please select a category");
       return;
     }
     
