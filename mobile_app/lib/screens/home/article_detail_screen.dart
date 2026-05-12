@@ -114,7 +114,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> with SingleTi
     });
 
     try {
-      final response = await ApiService.toggleLikeNews(articleId, _isLiked);
+      await ApiService.toggleLikeNews(articleId, _isLiked);
       
       // Update local storage
       final prefs = await SharedPreferences.getInstance();
