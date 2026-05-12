@@ -1,10 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../widgets/regular_news_card.dart';
 import '../home/article_detail_screen.dart';
-
-import '../notifications/notifications_screen.dart';
 import '../../services/api_service.dart';
 import '../../services/translation_service.dart';
 
@@ -17,10 +16,12 @@ class SearchExploreScreen extends StatefulWidget {
 
 class _SearchExploreScreenState extends State<SearchExploreScreen> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
   String _activeTab = 'My State';
-  bool _isSearching = false;
   bool _isLoading = true;
   String _langCode = 'EN';
+  String? _userState;
+  String _searchQuery = '';
 
   final List<String> _tabs = [
     'My State',
@@ -30,6 +31,9 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
     'Politics',
   ];
 
+  Map<String, String> _translatedToEnglishTabs = {};
+
+  List<dynamic> _allData = [];
   List<dynamic> _exploreData = [];
 
   String _tNoResults = 'No results found';
@@ -41,11 +45,24 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
     _initData();
   }
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _initData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _langCode = prefs.getString('selectedLanguage') ?? 'EN';
+      _userState = prefs.getString('userState');
     });
+
+    Map<String, String> translatedToEnglish = {};
+    for (String tab in _tabs) {
+      translatedToEnglish[tab] = tab;
+    }
 
     if (_langCode != 'EN') {
       _tNoResults = await TranslationService.translateText('No results found', _langCode);
@@ -53,13 +70,16 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
       
       List<String> translatedTabs = [];
       for (String tab in _tabs) {
-        translatedTabs.add(await TranslationService.translateText(tab, _langCode));
+        String translated = await TranslationService.translateText(tab, _langCode);
+        translatedTabs.add(translated);
+        translatedToEnglish[translated] = tab;
       }
       _tabs.clear();
       _tabs.addAll(translatedTabs);
       _activeTab = _tabs[0];
     }
     
+    _translatedToEnglishTabs = translatedToEnglish;
     await _fetchData();
   }
 
@@ -68,7 +88,20 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
       _isLoading = true;
     });
     try {
-      final data = await ApiService.getNews();
+      String apiQueryState = '';
+      String apiQueryCategory = '';
+      String englishTab = _translatedToEnglishTabs[_activeTab] ?? _activeTab;
+
+      if (_userState != null && (englishTab == 'My State' || englishTab == 'Local')) {
+        apiQueryState = _userState!;
+      } else if (englishTab != 'My State' && englishTab != 'Local') {
+        apiQueryCategory = englishTab;
+      }
+
+      final data = await ApiService.getNews(
+        state: apiQueryState.isNotEmpty ? apiQueryState : null,
+        category: apiQueryCategory.isNotEmpty ? apiQueryCategory : null,
+      );
       
       List<dynamic> mappedData = [];
       for (var item in data) {
@@ -94,10 +127,17 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
       
       if (!mounted) return;
       setState(() {
-        _exploreData = mappedData;
+        _allData = mappedData;
       });
+      _filterData();
     } catch (e) {
       debugPrint('Failed to load explore data: $e');
+      if (mounted) {
+        setState(() {
+          _allData = [];
+          _exploreData = [];
+        });
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -105,6 +145,47 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
         });
       }
     }
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    
+    // Show loading state while debouncing/searching as requested
+    setState(() {
+      _isLoading = true;
+    });
+    
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      setState(() {
+        _searchQuery = query.trim().toLowerCase();
+      });
+      _filterData();
+    });
+  }
+
+  void _filterData() {
+    if (_searchQuery.isEmpty) {
+      setState(() {
+        _exploreData = List.from(_allData);
+        _isLoading = false;
+      });
+      return;
+    }
+
+    final filtered = _allData.where((article) {
+      final title = (article['title'] ?? '').toLowerCase();
+      final excerpt = (article['excerpt'] ?? '').toLowerCase();
+      final content = (article['content'] ?? '').toLowerCase();
+      
+      return title.contains(_searchQuery) || 
+             excerpt.contains(_searchQuery) || 
+             content.contains(_searchQuery);
+    }).toList();
+
+    setState(() {
+      _exploreData = filtered;
+      _isLoading = false;
+    });
   }
 
   String _formatDate(String? dateStr) {
@@ -124,11 +205,6 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // If user is searching, we switch to search results view
-    if (_isSearching) {
-      return _buildSearchResultsView();
-    }
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -201,13 +277,37 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.feed_outlined, size: 64, color: Colors.grey.shade400),
-                          const SizedBox(height: 16),
+                          Container(
+                            width: 120,
+                            height: 120,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFFFFF0F2),
+                            ),
+                            child: const Icon(Icons.search_off, size: 60, color: Color(0xFFDC143C)),
+                          ),
+                          const SizedBox(height: 24),
                           Text(
-                            _tNoResults,
+                            _searchQuery.isEmpty ? "No articles found" : "$_tNoResults \"$_searchQuery\"",
                             style: GoogleFonts.roboto(
-                              fontSize: 16,
-                              color: const Color(0xFF979797),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF333333),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 32),
+                            child: Text(
+                              _searchQuery.isEmpty 
+                                  ? "Try switching to another category from the top menu or pull down to refresh."
+                                  : "Try checking for typos, using different keywords, or switching to another category.",
+                              style: GoogleFonts.roboto(
+                                fontSize: 14,
+                                color: const Color(0xFF979797),
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ),
                         ],
@@ -240,65 +340,7 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
     );
   }
 
-  Widget _buildSearchResultsView() {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            setState(() {
-              _isSearching = false;
-              _searchController.clear();
-            });
-          },
-        ),
-        title: _buildSearchBar(),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Color(0xFFDC143C)),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const NotificationsScreen()),
-              );
-            },
-          ),
-        ],
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: Color(0xFFE2E8F0)),
-        ),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Placeholder for empty state illustration
-            Container(
-              width: 150,
-              height: 150,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xFFFFF0F2),
-              ),
-              child: const Icon(Icons.search_off, size: 80, color: Color(0xFFDC143C)),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              _tNoResults,
-              style: GoogleFonts.roboto(
-                fontSize: 16,
-                color: const Color(0xFF979797),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildSearchBar() {
     return Container(
@@ -318,21 +360,25 @@ class _SearchExploreScreenState extends State<SearchExploreScreen> {
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          hintText: _isSearching ? "User's search query" : _tSearchNews,
+          hintText: _tSearchNews,
+          prefixIcon: const Icon(Icons.search, color: Color(0xFF94A3B8), size: 20),
+          suffixIcon: _searchController.text.isNotEmpty 
+              ? IconButton(
+                  icon: const Icon(Icons.clear, color: Color(0xFF94A3B8), size: 20),
+                  onPressed: () {
+                    _searchController.clear();
+                    _onSearchChanged('');
+                  },
+                )
+              : null,
           hintStyle: GoogleFonts.lexendDeca(
             color: const Color(0xFF94A3B8),
             fontSize: 13,
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 10),
         ),
-        onSubmitted: (value) {
-          if (value.trim().isNotEmpty) {
-            setState(() {
-              _isSearching = true;
-            });
-          }
-        },
+        onChanged: _onSearchChanged,
       ),
     );
   }
