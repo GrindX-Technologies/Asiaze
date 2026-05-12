@@ -16,6 +16,7 @@ export interface INews extends Document {
   status: 'draft' | 'published' | 'archived';
   views: number;
   likes: number;
+  likedBy: mongoose.Types.ObjectId[];
   shares: number;
   isBreaking: boolean;
   publishedAt?: Date;
@@ -40,6 +41,7 @@ const newsSchema = new Schema(
     status: { type: String, enum: ['draft', 'published', 'archived'], default: 'draft' },
     views: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
+    likedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     shares: { type: Number, default: 0 },
     isBreaking: { type: Boolean, default: false },
     publishedAt: { type: Date },

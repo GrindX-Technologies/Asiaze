@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/saved_articles_service.dart';
+import '../../services/api_service.dart';
 
 class ArticleDetailScreen extends StatefulWidget {
   final Map<String, dynamic> article;
@@ -27,6 +29,8 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> with SingleTi
   late AnimationController _saveAnimController;
   late Animation<double> _scaleAnimation;
 
+  bool _isLiking = false;
+
   @override
   void initState() {
     super.initState();
@@ -46,15 +50,22 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> with SingleTi
     ));
 
     _checkSavedStatus();
-    // Simulate checking like status locally
-    _isLiked = false;
   }
 
   Future<void> _checkSavedStatus() async {
     final currentArticle = _getCurrentArticle();
-    final saved = await SavedArticlesService.isSaved(currentArticle['id'] ?? '');
+    final articleId = currentArticle['id'] ?? currentArticle['_id'] ?? '';
+    final saved = await SavedArticlesService.isSaved(articleId);
+    
+    // Also check local liked status
+    final prefs = await SharedPreferences.getInstance();
+    final likedArticles = prefs.getStringList('likedArticles') ?? [];
+    
     if (mounted) {
-      setState(() => _isSaved = saved);
+      setState(() {
+        _isSaved = saved;
+        _isLiked = likedArticles.contains(articleId);
+      });
     }
   }
 
@@ -77,17 +88,73 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> with SingleTi
     _checkSavedStatus();
   }
 
-  void _toggleLike() {
+  Future<void> _toggleLike() async {
+    if (_isLiking) return;
+    
+    final token = await ApiService.getToken();
+    if (token == null || token.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please log in to like articles.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+
+    final currentArticle = _getCurrentArticle();
+    final articleId = currentArticle['id'] ?? currentArticle['_id'] ?? '';
+
     setState(() {
+      _isLiking = true;
       _isLiked = !_isLiked;
     });
-    if (_isLiked) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Article liked!'),
-          duration: Duration(seconds: 1),
-        ),
-      );
+
+    try {
+      final response = await ApiService.toggleLikeNews(articleId, _isLiked);
+      
+      // Update local storage
+      final prefs = await SharedPreferences.getInstance();
+      final likedArticles = prefs.getStringList('likedArticles') ?? [];
+      if (_isLiked && !likedArticles.contains(articleId)) {
+        likedArticles.add(articleId);
+      } else if (!_isLiked && likedArticles.contains(articleId)) {
+        likedArticles.remove(articleId);
+      }
+      await prefs.setStringList('likedArticles', likedArticles);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isLiked ? 'Article liked!' : 'Article unliked!'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error toggling like: $e');
+      if (mounted) {
+        // Rollback optimistic update
+        setState(() {
+          _isLiked = !_isLiked;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update like: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLiking = false;
+        });
+      }
     }
   }
 

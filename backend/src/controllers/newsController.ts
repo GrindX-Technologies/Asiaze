@@ -126,3 +126,35 @@ export const deleteNews = async (req: Request, res: Response): Promise<void> => 
     });
   }
 };
+
+// @desc    Like/Unlike a news article
+// @route   PUT /api/news/:id/like
+// @access  Private
+export const toggleLikeNews = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const news = await News.findById(req.params.id);
+    if (!news) {
+      res.status(404).json({ message: 'News article not found' });
+      return;
+    }
+
+    const userId = (req as any).user._id;
+    const isLikedIndex = news.likedBy.findIndex((id) => id.toString() === userId.toString());
+
+    if (isLikedIndex !== -1) {
+      // User already liked it, so unlike it
+      news.likedBy.splice(isLikedIndex, 1);
+      news.likes = Math.max(0, (news.likes || 0) - 1);
+    } else {
+      // User hasn't liked it, so like it
+      news.likedBy.push(userId);
+      news.likes = (news.likes || 0) + 1;
+    }
+
+    const updatedNews = await news.save();
+    res.json({ likes: updatedNews.likes, isLiked: isLikedIndex === -1 });
+  } catch (error: any) {
+    console.error('Error toggling like for news:', error);
+    res.status(500).json({ message: error.message });
+  }
+};

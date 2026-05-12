@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
@@ -207,12 +208,18 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
   bool _isMuted = false;
   bool _isSaved = false;
   
+  bool _isLiked = false;
+  int _likeCount = 0;
+  bool _isLiking = false;
+  
   late AnimationController _saveAnimController;
   late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
+    
+    _likeCount = widget.reel['likes'] ?? 0;
     
     _saveAnimController = AnimationController(
       vsync: this,
@@ -231,9 +238,18 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
   }
 
   Future<void> _checkSavedStatus() async {
-    final saved = await SavedReelsService.isSaved(widget.reel['id'] ?? '');
+    final saved = await SavedReelsService.isSaved(widget.reel['id'] ?? widget.reel['_id'] ?? '');
+    
+    // Also check local liked status
+    final prefs = await SharedPreferences.getInstance();
+    final likedReels = prefs.getStringList('likedReels') ?? [];
+    final reelId = widget.reel['id'] ?? widget.reel['_id'] ?? '';
+    
     if (mounted) {
-      setState(() => _isSaved = saved);
+      setState(() {
+        _isSaved = saved;
+        _isLiked = likedReels.contains(reelId);
+      });
     }
   }
 
@@ -252,7 +268,76 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
         );
       }
     }
-    _checkSavedStatus();
+    if (mounted) {
+      setState(() => _isSaved = !_isSaved);
+    }
+  }
+
+  Future<void> _toggleLike() async {
+    if (_isLiking) return;
+    
+    final token = await ApiService.getToken();
+    if (token == null || token.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please log in to like reels.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _isLiking = true;
+      _isLiked = !_isLiked;
+      _likeCount = _isLiked ? _likeCount + 1 : math.max(0, _likeCount - 1);
+    });
+
+    try {
+      final reelId = widget.reel['id'] ?? widget.reel['_id'] ?? '';
+      final response = await ApiService.toggleLikeReel(reelId, _isLiked);
+      
+      // Update local storage
+      final prefs = await SharedPreferences.getInstance();
+      final likedReels = prefs.getStringList('likedReels') ?? [];
+      if (_isLiked && !likedReels.contains(reelId)) {
+        likedReels.add(reelId);
+      } else if (!_isLiked && likedReels.contains(reelId)) {
+        likedReels.remove(reelId);
+      }
+      await prefs.setStringList('likedReels', likedReels);
+
+      if (mounted && response['likes'] != null) {
+        setState(() {
+          _likeCount = response['likes'];
+        });
+      }
+    } catch (e) {
+      debugPrint('Error toggling like: $e');
+      if (mounted) {
+        // Rollback optimistic update
+        setState(() {
+          _isLiked = !_isLiked;
+          _likeCount = _isLiked ? _likeCount + 1 : math.max(0, _likeCount - 1);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update like: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLiking = false;
+        });
+      }
+    }
   }
 
   void _shareReel() {
@@ -394,7 +479,14 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
           bottom: 120,
           child: Column(
             children: [
-              _buildActionButton(Icons.favorite, widget.reel['likes']),
+              GestureDetector(
+                onTap: _toggleLike,
+                child: _buildActionButton(
+                  _isLiked ? Icons.favorite : Icons.favorite_border,
+                  _likeCount.toString(),
+                  iconColor: _isLiked ? Colors.red : Colors.white,
+                ),
+              ),
               const SizedBox(height: 24),
               GestureDetector(
                 onTap: _toggleSave,
@@ -522,7 +614,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
     );
   }
 
-  Widget _buildActionButton(IconData icon, String? label) {
+  Widget _buildActionButton(IconData icon, String? label, {Color iconColor = Colors.white}) {
     return Column(
       children: [
         Container(
@@ -532,7 +624,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
             color: Colors.black.withAlpha(100),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: Colors.white, size: 24),
+          child: Icon(icon, color: iconColor, size: 24),
         ),
         if (label != null) ...[
           const SizedBox(height: 4),

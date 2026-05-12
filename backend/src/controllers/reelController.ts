@@ -103,3 +103,35 @@ export const deleteReel = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Like/Unlike a reel
+// @route   PUT /api/reels/:id/like
+// @access  Private
+export const toggleLikeReel = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const reel = await Reel.findById(req.params.id);
+    if (!reel) {
+      res.status(404).json({ message: 'Reel not found' });
+      return;
+    }
+
+    const userId = (req as any).user._id;
+    const isLikedIndex = reel.likedBy.findIndex((id) => id.toString() === userId.toString());
+
+    if (isLikedIndex !== -1) {
+      // User already liked it, so unlike it
+      reel.likedBy.splice(isLikedIndex, 1);
+      reel.likes = Math.max(0, (reel.likes || 0) - 1);
+    } else {
+      // User hasn't liked it, so like it
+      reel.likedBy.push(userId);
+      reel.likes = (reel.likes || 0) + 1;
+    }
+
+    const updatedReel = await reel.save();
+    res.json({ likes: updatedReel.likes, isLiked: isLikedIndex === -1 });
+  } catch (error: any) {
+    console.error('Error toggling like for reel:', error);
+    res.status(500).json({ message: error.message });
+  }
+};

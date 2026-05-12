@@ -133,6 +133,11 @@ export default function ViewReelPage() {
               </span>
             </p>
           </div>
+
+          <div>
+            <h3 className="font-bold text-black text-base mb-1">Likes Count:</h3>
+            <p className="text-gray-600">{reel.likes || 0}</p>
+          </div>
         </div>
 
         <div className="flex justify-end gap-4 mt-8 pt-8 border-t border-gray-100">

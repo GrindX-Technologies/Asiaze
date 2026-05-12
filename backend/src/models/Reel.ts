@@ -11,6 +11,7 @@ export interface IReel extends Document {
   views: number;
   likes: number;
   shares: number;
+  likedBy: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +28,7 @@ const reelSchema = new Schema(
     views: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
     shares: { type: Number, default: 0 },
+    likedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   },
   { timestamps: true }
 );

@@ -245,6 +245,25 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> toggleLikeNews(String newsId, bool isLiked) async {
+    final token = await getToken();
+    final action = isLiked ? 'like' : 'unlike';
+    final response = await http.put(
+      Uri.parse('$baseUrl/news/$newsId/like'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token'
+      },
+      body: jsonEncode({'action': action}),
+    );
+    
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to toggle like');
+    }
+  }
+
   static Future<List<dynamic>> getBreakingNews() async {
     final token = await getToken();
     final response = await http.get(
@@ -274,6 +293,25 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to load reels');
+    }
+  }
+
+  static Future<Map<String, dynamic>> toggleLikeReel(String reelId, bool isLiked) async {
+    final token = await getToken();
+    final action = isLiked ? 'like' : 'unlike';
+    final response = await http.put(
+      Uri.parse('$baseUrl/reels/$reelId/like'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token'
+      },
+      body: jsonEncode({'action': action}),
+    );
+    
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to toggle like');
     }
   }
 
