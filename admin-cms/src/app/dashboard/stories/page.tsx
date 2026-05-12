@@ -31,6 +31,134 @@ export default function StorysListPage() {
     }
   };
 
+  const toggleStatus = async (id: string, currentStatus: string) => {
+    try {
+      const getCookie = (name: string) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift();
+        return "";
+      };
+      const token = getCookie("token");
+      const newStatus = currentStatus === 'published' ? 'draft' : 'published';
+      
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/stories/${id}/status`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (res.ok) {
+        setStoriesData(storiesData.map(story => 
+          story._id === id ? { ...story, status: newStatus } : story
+        ));
+      } else {
+        alert("Failed to update status");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error updating status");
+    }
+  };
+
+  const deleteStory = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this story?")) return;
+    
+    try {
+      const getCookie = (name: string) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift();
+        return "";
+      };
+      const token = getCookie("token");
+      
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/stories/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        setStoriesData(storiesData.filter(story => story._id !== id));
+        setSelectedStories(selectedStories.filter(sId => sId !== id));
+      } else {
+        alert("Failed to delete story");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting story");
+    }
+  };
+
+  const handleBulkStatusChange = async (newStatus: string) => {
+    if (!confirm(`Are you sure you want to change status to ${newStatus} for selected stories?`)) return;
+    
+    try {
+      const getCookie = (name: string) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift();
+        return "";
+      };
+      const token = getCookie("token");
+
+      await Promise.all(
+        selectedStories.map((id) =>
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/stories/${id}/status`, {
+            method: "PATCH",
+            headers: { 
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}` 
+            },
+            body: JSON.stringify({ status: newStatus }),
+          })
+        )
+      );
+
+      setStoriesData(storiesData.map(story => 
+        selectedStories.includes(story._id) ? { ...story, status: newStatus } : story
+      ));
+      setSelectedStories([]);
+      alert(`Successfully updated selected stories to ${newStatus}`);
+    } catch (err) {
+      console.error(err);
+      alert("Error updating status for selected stories");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm("Are you sure you want to delete ALL selected stories? This action cannot be undone.")) return;
+    
+    try {
+      const getCookie = (name: string) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift();
+        return "";
+      };
+      const token = getCookie("token");
+
+      await Promise.all(
+        selectedStories.map((id) =>
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/stories/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        )
+      );
+
+      setStoriesData(storiesData.filter(story => !selectedStories.includes(story._id)));
+      setSelectedStories([]);
+      alert("Successfully deleted selected stories");
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting selected stories");
+    }
+  };
+
   useEffect(() => {
     const fetchStories = async () => {
       try {
@@ -164,13 +292,14 @@ export default function StorysListPage() {
                   <TableCell className="text-gray-900 font-medium">EN</TableCell>
                   <TableCell>
                     <Badge 
-                      className={`text-white border-none rounded-full px-3 py-0.5 font-medium ${
-                        item.status === 'active' 
+                      onClick={() => toggleStatus(item._id, item.status)}
+                      className={`text-white border-none rounded-full px-3 py-0.5 font-medium cursor-pointer ${
+                        item.status === 'published' 
                           ? 'bg-[#22C55E] hover:bg-[#22C55E]/90' 
                           : 'bg-[#9CA3AF] hover:bg-[#9CA3AF]/90'
                       }`}
                     >
-                      {item.status}
+                      {item.status || 'published'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-gray-900 font-medium">{item.views}</TableCell>
@@ -184,7 +313,10 @@ export default function StorysListPage() {
                       <Link href={`/dashboard/stories/view/${item._id}`}>
                         <Eye className="w-[18px] h-[18px] cursor-pointer hover:text-black transition-colors" />
                       </Link>
-                      <Trash2 className="w-[18px] h-[18px] cursor-pointer hover:text-red-600 text-red-500 transition-colors" />
+                      <Trash2 
+                        onClick={() => deleteStory(item._id)}
+                        className="w-[18px] h-[18px] cursor-pointer hover:text-red-600 text-red-500 transition-colors" 
+                      />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -197,13 +329,24 @@ export default function StorysListPage() {
       {/* Footer Bulk Actions */}
       {selectedStories.length > 0 && (
         <div className="flex justify-end gap-3 pt-4">
-          <Button className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full font-bold px-6">
+          <Button 
+            onClick={() => handleBulkStatusChange('published')}
+            className="bg-[#E0202B] hover:bg-[#C11B24] text-white rounded-full font-bold px-6"
+          >
             Publish Selected
           </Button>
-          <Button variant="outline" className="bg-gray-100 hover:bg-gray-200 text-gray-900 border-0 rounded-full font-bold px-6">
+          <Button 
+            onClick={() => handleBulkStatusChange('draft')}
+            variant="outline" 
+            className="bg-gray-100 hover:bg-gray-200 text-gray-900 border-0 rounded-full font-bold px-6"
+          >
             Unpublish Selected
           </Button>
-          <Button variant="outline" className="bg-gray-100 hover:bg-gray-200 text-gray-900 border-0 rounded-full font-bold px-6">
+          <Button 
+            onClick={handleBulkDelete}
+            variant="outline" 
+            className="bg-gray-100 hover:bg-gray-200 text-gray-900 border-0 rounded-full font-bold px-6"
+          >
             Delete Selected
           </Button>
         </div>

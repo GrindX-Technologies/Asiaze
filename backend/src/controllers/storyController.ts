@@ -3,7 +3,18 @@ import Story from '../models/Story';
 
 export const getStories = async (req: Request, res: Response) => {
   try {
-    const stories = await Story.find().sort({ createdAt: -1 }).populate('author', 'name avatar');
+    const { status, category } = req.query;
+    let query: any = {};
+    
+    if (status && status !== 'all') {
+      query.status = status;
+    }
+    
+    if (category) {
+      query.category = category;
+    }
+
+    const stories = await Story.find(query).sort({ createdAt: -1 }).populate('author', 'name avatar');
     res.status(200).json(stories);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching stories', error });
@@ -59,6 +70,30 @@ export const updateStory = async (req: Request, res: Response) => {
     res.status(200).json(story);
   } catch (error) {
     res.status(500).json({ message: 'Error updating story', error });
+  }
+};
+
+export const updateStoryStatus = async (req: Request, res: Response) => {
+  try {
+    const { status } = req.body;
+    
+    if (!['published', 'draft'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const story = await Story.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+
+    if (!story) {
+      return res.status(404).json({ message: 'Story not found' });
+    }
+
+    res.status(200).json(story);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating story status', error });
   }
 };
 
