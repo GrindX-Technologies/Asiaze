@@ -23,6 +23,17 @@ class ApiService {
     await prefs.remove('token');
   }
 
+  static Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('userState');
+    await prefs.remove('selectedCategories');
+    await prefs.remove('likedArticles');
+    await prefs.remove('likedReels');
+    await prefs.remove('saved_articles');
+    await prefs.remove('saved_reels');
+  }
+
   static Future<Map<String, dynamic>> login(String email, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/login'),
