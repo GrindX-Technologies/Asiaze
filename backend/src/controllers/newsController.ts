@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import News from '../models/News';
-
 import User from '../models/User';
+import Setting from '../models/Setting';
 
 // @desc    Get all news
 // @route   GET /api/news
@@ -16,7 +16,16 @@ export const getNews = async (req: Request, res: Response): Promise<void> => {
     if (state) query.states = state;
     if (isBreaking !== undefined) query.isBreaking = isBreaking === 'true';
 
-    const news = await News.find(query).populate('category author tags').sort({ createdAt: -1 });
+    let newsQuery = News.find(query).populate('category author tags').sort({ createdAt: -1 });
+
+    // Enforce breaking news limit if requested
+    if (isBreaking === 'true') {
+      const limitSetting = await Setting.findOne({ key: 'breaking_news_limit' });
+      const limit = limitSetting && limitSetting.value ? Number(limitSetting.value) : 5;
+      newsQuery = newsQuery.limit(limit);
+    }
+
+    const news = await newsQuery;
     res.json(news);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
