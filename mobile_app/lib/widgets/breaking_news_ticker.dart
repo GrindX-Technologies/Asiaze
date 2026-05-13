@@ -130,7 +130,7 @@ class _BreakingNewsTickerState extends State<BreakingNewsTicker> {
     return Container(
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      color: const Color(0xFFD32F2F), // Red color similar to screenshot
+      color: const Color(0xFFE0212B), // Changed background color as requested
       child: DefaultTextStyle.merge(
         style: GoogleFonts.lexendDeca(
           color: Colors.white,

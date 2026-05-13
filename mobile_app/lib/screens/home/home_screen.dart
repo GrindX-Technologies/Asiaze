@@ -45,7 +45,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   String? _userState;
   
   // Translated UI Strings
-  String _tBreakingNews = 'Breaking News: Major updates from around the world...';
   String _tLoadNewFeed = 'Load New Feed';
   String _tNoArticles = 'No articles available right now';
   String _tAllCaughtUp = 'You\'re all caught up!';
@@ -105,7 +104,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     // Translate UI strings if needed
     Map<String, String> translatedToEnglish = {};
     if (_langCode != 'EN') {
-      _tBreakingNews = await TranslationService.translateText('Breaking News: Major updates from around the world...', _langCode);
       _tLoadNewFeed = await TranslationService.translateText('Load New Feed', _langCode);
       _tNoArticles = await TranslationService.translateText('No articles available right now', _langCode);
       _tAllCaughtUp = await TranslationService.translateText('You\'re all caught up!', _langCode);
@@ -271,22 +269,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         appBar: _buildAppBar(),
         body: Column(
           children: [
-            // Ticker
-            Container(
-              width: double.infinity,
-              color: const Color(0xFFDC143C),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                _tBreakingNews,
-                style: GoogleFonts.roboto(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
             // Vertical Swipeable Feed
             Expanded(
               child: Stack(
