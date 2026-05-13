@@ -13,6 +13,16 @@ class ApiService {
     return prefs.getString('token');
   }
 
+  static Future<String> getDeviceId() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? deviceId = prefs.getString('deviceId');
+    if (deviceId == null) {
+      deviceId = DateTime.now().millisecondsSinceEpoch.toString() + '_' + (1000 + (DateTime.now().microsecond % 9000)).toString();
+      await prefs.setString('deviceId', deviceId);
+    }
+    return deviceId;
+  }
+
   static Future<void> setToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
@@ -384,6 +394,39 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to toggle like');
+    }
+  }
+
+  static Future<Map<String, dynamic>> toggleLikeStory(String storyId) async {
+    final token = await getToken();
+    final response = await http.put(
+      Uri.parse('$baseUrl/stories/$storyId/like'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token'
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to toggle story like');
+    }
+  }
+
+  static Future<Map<String, dynamic>> recordStoryView(String storyId, String deviceId) async {
+    final token = await getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/stories/$storyId/view'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token'
+      },
+      body: jsonEncode({'deviceId': deviceId}),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to record story view');
     }
   }
 

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../services/api_service.dart';
 import '../../services/translation_service.dart';
+import '../../services/story_event_bus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // --- Data Models ---
@@ -25,10 +27,16 @@ class StoryPageData {
 class StoryGroupData {
   final String id;
   final List<StoryPageData> pages;
+  int likes;
+  int views;
+  bool isLikedByMe;
 
   StoryGroupData({
     required this.id,
     required this.pages,
+    this.likes = 0,
+    this.views = 0,
+    this.isLikedByMe = false,
   });
 }
 
@@ -71,6 +79,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
   Future<void> _fetchStories() async {
     final prefs = await SharedPreferences.getInstance();
     _langCode = prefs.getString('selectedLanguage') ?? 'EN';
+    final List<String> likedStories = prefs.getStringList('likedStories') ?? [];
 
     try {
       final data = await ApiService.getStories();
@@ -106,6 +115,9 @@ class _StoriesScreenState extends State<StoriesScreen> {
           mappedStories.add(StoryGroupData(
             id: group['_id'],
             pages: mappedPages,
+            likes: group['likes'] ?? 0,
+            views: group['views'] ?? 0,
+            isLikedByMe: likedStories.contains(group['_id']),
           ));
         }
       }
@@ -228,6 +240,7 @@ class StoryGroupView extends StatefulWidget {
 class _StoryGroupViewState extends State<StoryGroupView> with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   int _currentIndex = 0;
+  bool _hasRecordedView = false;
 
   @override
   void initState() {
@@ -254,6 +267,85 @@ class _StoryGroupViewState extends State<StoryGroupView> with SingleTickerProvid
     });
 
     _animController.forward();
+    _recordView();
+  }
+
+  Future<void> _recordView() async {
+    if (_hasRecordedView) return;
+    _hasRecordedView = true;
+    try {
+      String deviceId = await ApiService.getDeviceId();
+      final updatedStory = await ApiService.recordStoryView(widget.storyGroup.id, deviceId);
+      if (mounted) {
+        setState(() {
+          widget.storyGroup.views = updatedStory['views'] ?? widget.storyGroup.views;
+        });
+        StoryEventBus.broadcast({
+          'id': widget.storyGroup.id,
+          'views': widget.storyGroup.views,
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to record story view: $e');
+    }
+  }
+
+  Future<void> _toggleLike() async {
+    // Optimistic UI update
+    setState(() {
+      if (widget.storyGroup.isLikedByMe) {
+        widget.storyGroup.isLikedByMe = false;
+        widget.storyGroup.likes = (widget.storyGroup.likes > 0) ? widget.storyGroup.likes - 1 : 0;
+      } else {
+        widget.storyGroup.isLikedByMe = true;
+        widget.storyGroup.likes++;
+      }
+    });
+
+    try {
+      final updatedStory = await ApiService.toggleLikeStory(widget.storyGroup.id);
+      
+      // Update local storage
+      final prefs = await SharedPreferences.getInstance();
+      final likedStories = prefs.getStringList('likedStories') ?? [];
+      
+      if (mounted) {
+        setState(() {
+          widget.storyGroup.likes = updatedStory['likes'] ?? widget.storyGroup.likes;
+          
+          if (widget.storyGroup.isLikedByMe && !likedStories.contains(widget.storyGroup.id)) {
+            likedStories.add(widget.storyGroup.id);
+          } else if (!widget.storyGroup.isLikedByMe && likedStories.contains(widget.storyGroup.id)) {
+            likedStories.remove(widget.storyGroup.id);
+          }
+          prefs.setStringList('likedStories', likedStories);
+        });
+        StoryEventBus.broadcast({
+          'id': widget.storyGroup.id,
+          'likes': widget.storyGroup.likes,
+          'isLikedByMe': widget.storyGroup.isLikedByMe,
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to toggle story like: $e');
+      // Revert optimistic update on failure
+      setState(() {
+        if (widget.storyGroup.isLikedByMe) {
+          widget.storyGroup.isLikedByMe = false;
+          widget.storyGroup.likes = (widget.storyGroup.likes > 0) ? widget.storyGroup.likes - 1 : 0;
+        } else {
+          widget.storyGroup.isLikedByMe = true;
+          widget.storyGroup.likes++;
+        }
+      });
+    }
+  }
+
+  void _shareStory() {
+    final String deepLink = 'https://asiaze.cloud/stories/${widget.storyGroup.id}';
+    final String title = widget.storyGroup.pages[_currentIndex].title;
+    // ignore: deprecated_member_use
+    Share.share('Check out this story: $title\n$deepLink');
   }
 
   @override
@@ -457,17 +549,40 @@ class _StoryGroupViewState extends State<StoryGroupView> with SingleTickerProvid
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.bookmark_border, color: Colors.white, size: 28),
-                        onPressed: () {},
+                      // Views counter
+                      Row(
+                        children: [
+                          const Icon(Icons.visibility, color: Colors.white70, size: 24),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${widget.storyGroup.views}',
+                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 26),
-                        onPressed: () {},
+                      const SizedBox(width: 16),
+                      // Like button and counter
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              widget.storyGroup.isLikedByMe ? Icons.favorite : Icons.favorite_border,
+                              color: widget.storyGroup.isLikedByMe ? Colors.red : Colors.white,
+                              size: 28,
+                            ),
+                            onPressed: _toggleLike,
+                          ),
+                          Text(
+                            '${widget.storyGroup.likes}',
+                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
+                      const Spacer(),
+                      // Share button
                       IconButton(
                         icon: const Icon(Icons.share, color: Colors.white, size: 28),
-                        onPressed: () {},
+                        onPressed: _shareStory,
                       ),
                     ],
                   ),

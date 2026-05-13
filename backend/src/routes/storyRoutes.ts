@@ -1,5 +1,5 @@
 import express from 'express';
-import { getStories, getStoryById, createStory, updateStory, deleteStory, updateStoryStatus } from '../controllers/storyController';
+import { getStories, getStoryById, createStory, updateStory, deleteStory, updateStoryStatus, toggleLikeStory, recordStoryView } from '../controllers/storyController';
 import { protect, admin } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -10,6 +10,12 @@ router.route('/')
 
 router.route('/:id/status')
   .patch(protect, admin, updateStoryStatus);
+
+router.route('/:id/like')
+  .put(protect, toggleLikeStory);
+
+router.route('/:id/view')
+  .post(recordStoryView);
 
 router.route('/:id')
   .get(getStoryById)

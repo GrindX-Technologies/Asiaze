@@ -13,6 +13,8 @@ export interface IStory extends Document {
   status: string;
   views: number;
   likes: number;
+  likedBy: mongoose.Types.ObjectId[];
+  viewedBy: string[]; // Can store user IDs or device/session IDs
   author: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -32,6 +34,8 @@ const StorySchema: Schema = new Schema(
     status: { type: String, enum: ['published', 'draft'], default: 'published' },
     views: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
+    likedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    viewedBy: [{ type: String }],
     author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },
   { timestamps: true }

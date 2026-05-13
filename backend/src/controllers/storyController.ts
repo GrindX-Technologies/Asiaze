@@ -108,3 +108,49 @@ export const deleteStory = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error deleting story', error });
   }
 };
+
+export const toggleLikeStory = async (req: Request, res: Response) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) return res.status(404).json({ message: 'Story not found' });
+
+    const userId = (req as any).user._id;
+    const isLikedIndex = story.likedBy.findIndex((id) => id.toString() === userId.toString());
+
+    if (isLikedIndex !== -1) {
+      story.likedBy.splice(isLikedIndex, 1);
+      story.likes = Math.max(0, (story.likes || 0) - 1);
+    } else {
+      story.likedBy.push(userId);
+      story.likes = (story.likes || 0) + 1;
+    }
+
+    const updatedStory = await story.save();
+    res.json(updatedStory);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const recordStoryView = async (req: Request, res: Response) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) return res.status(404).json({ message: 'Story not found' });
+
+    const userIdOrDeviceId = req.body.deviceId || ((req as any).user ? (req as any).user._id.toString() : null);
+
+    if (!userIdOrDeviceId) {
+      return res.status(400).json({ message: 'Missing deviceId or user auth' });
+    }
+
+    if (!story.viewedBy.includes(userIdOrDeviceId)) {
+      story.viewedBy.push(userIdOrDeviceId);
+      story.views = (story.views || 0) + 1;
+      await story.save();
+    }
+
+    res.json(story);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
