@@ -463,7 +463,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       title: SizedBox(
         height: 36, // Fixed height to constrain the image appropriately
         child: Image.asset(
-          'assets/images/header_logo.png',
+          'assets/images/asiaze_logo_header.png',
           fit: BoxFit.contain,
         ),
       ),

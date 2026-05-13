@@ -494,10 +494,12 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
-                Image.asset(
-                  'assets/images/logo.png',
-                  width: 100, // Added explicit width to fit the horizontal logo gracefully
-                  fit: BoxFit.contain,
+                SizedBox(
+                  height: 36,
+                  child: Image.asset(
+                    'assets/images/asiaze_logo_header.png',
+                    fit: BoxFit.contain,
+                  ),
                 ),
                 IconButton(
                   icon: Icon(_isMuted ? Icons.volume_off : Icons.volume_up, color: Colors.white),

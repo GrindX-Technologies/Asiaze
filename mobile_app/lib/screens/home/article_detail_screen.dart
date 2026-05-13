@@ -296,20 +296,11 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> with SingleTi
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFDC143C),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            'asiaze',
-            style: GoogleFonts.lexendDeca(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -1,
-            ),
+        title: SizedBox(
+          height: 36,
+          child: Image.asset(
+            'assets/images/asiaze_logo_header.png',
+            fit: BoxFit.contain,
           ),
         ),
         centerTitle: true,
