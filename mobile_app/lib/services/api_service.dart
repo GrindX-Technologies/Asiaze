@@ -297,7 +297,7 @@ class ApiService {
     await prefs.setString('language', lang);
   }
 
-  static Future<List<dynamic>> getNews({String? state, String? category}) async {
+  static Future<List<dynamic>> getNews({String? state, String? category, bool? isBreaking}) async {
     final token = await getToken();
     
     List<String> queryParams = ['status=published'];
@@ -306,6 +306,9 @@ class ApiService {
     }
     if (category != null && category.isNotEmpty) {
       queryParams.add('category=${Uri.encodeComponent(category)}');
+    }
+    if (isBreaking != null) {
+      queryParams.add('isBreaking=$isBreaking');
     }
 
     String url = '$baseUrl/news';

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../widgets/news_card.dart';
+import '../../widgets/breaking_news_ticker.dart';
 import '../explore/search_explore_screen.dart';
 import 'article_detail_screen.dart';
 import 'reels_screen.dart';
@@ -467,73 +468,78 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
       ),
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(40),
-        child: SizedBox(
-          height: 40,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _tabs.length,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemBuilder: (context, index) {
-              final tab = _tabs[index];
-              final isActive = tab == _activeTab;
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _activeTab = tab;
-                  });
-                  _fetchFeed(); // Add this to reload feed based on tab
-                  
-                  if (tab == _tReels) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ReelsScreen()),
-                    ).then((_) {
+        preferredSize: const Size.fromHeight(76), // 40 for tabs + 36 for ticker
+        child: Column(
+          children: [
+            SizedBox(
+              height: 40,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _tabs.length,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemBuilder: (context, index) {
+                  final tab = _tabs[index];
+                  final isActive = tab == _activeTab;
+                  return GestureDetector(
+                    onTap: () {
                       setState(() {
-                        _activeTab = _tabs[0]; // Reset to initial tab
+                        _activeTab = tab;
                       });
-                      _fetchFeed();
-                    });
-                  } else if (tab == _tStories) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const StoriesScreen()),
-                    ).then((_) {
-                      setState(() {
-                        _activeTab = _tabs[0];
-                      });
-                      _fetchFeed();
-                    });
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.only(right: 20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        tab,
-                        style: GoogleFonts.lexendDeca(
-                          fontSize: 14,
-                          fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                          color: isActive ? const Color(0xFFDC143C) : Colors.black,
-                        ),
+                      _fetchFeed(); // Add this to reload feed based on tab
+                      
+                      if (tab == _tReels) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ReelsScreen()),
+                        ).then((_) {
+                          setState(() {
+                            _activeTab = _tabs[0]; // Reset to initial tab
+                          });
+                          _fetchFeed();
+                        });
+                      } else if (tab == _tStories) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const StoriesScreen()),
+                        ).then((_) {
+                          setState(() {
+                            _activeTab = _tabs[0];
+                          });
+                          _fetchFeed();
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.only(right: 20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            tab,
+                            style: GoogleFonts.lexendDeca(
+                              fontSize: 14,
+                              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                              color: isActive ? const Color(0xFFDC143C) : Colors.black,
+                            ),
+                          ),
+                          if (isActive)
+                            Container(
+                              margin: const EdgeInsets.only(top: 4),
+                              height: 2,
+                              width: 20,
+                              color: const Color(0xFFDC143C),
+                            )
+                          else
+                            const SizedBox(height: 6),
+                        ],
                       ),
-                      if (isActive)
-                        Container(
-                          margin: const EdgeInsets.only(top: 4),
-                          height: 2,
-                          width: 20,
-                          color: const Color(0xFFDC143C),
-                        )
-                      else
-                        const SizedBox(height: 6),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            BreakingNewsTicker(feedList: _feedData),
+          ],
         ),
       ),
     );
