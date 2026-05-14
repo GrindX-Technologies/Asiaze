@@ -17,8 +17,10 @@ export interface IUser extends Document {
   deviceToken?: string;
   savedNews: mongoose.Types.ObjectId[];
   savedReels: mongoose.Types.ObjectId[];
+  savedAds: mongoose.Types.ObjectId[];
   likedNews: mongoose.Types.ObjectId[];
   likedReels: mongoose.Types.ObjectId[];
+  likedAds: mongoose.Types.ObjectId[];
   loginHistory: Array<{
     ip: string;
     device: string;
@@ -46,8 +48,10 @@ const userSchema = new Schema(
     deviceToken: { type: String },
     savedNews: [{ type: Schema.Types.ObjectId, ref: 'News' }],
     savedReels: [{ type: Schema.Types.ObjectId, ref: 'Reel' }],
+    savedAds: [{ type: Schema.Types.ObjectId, ref: 'Ad' }],
     likedNews: [{ type: Schema.Types.ObjectId, ref: 'News' }],
     likedReels: [{ type: Schema.Types.ObjectId, ref: 'Reel' }],
+    likedAds: [{ type: Schema.Types.ObjectId, ref: 'Ad' }],
     loginHistory: [
       {
         ip: { type: String },

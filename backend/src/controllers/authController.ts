@@ -332,3 +332,28 @@ export const toggleSaveReel = async (req: Request, res: Response): Promise<void>
     res.status(500).json({ message: error.message });
   }
 };
+
+export const toggleSaveAd = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).user._id;
+    const adId = req.params.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    const isSaved = user.savedAds.includes(adId as any);
+    if (isSaved) {
+      user.savedAds = user.savedAds.filter(id => id.toString() !== adId);
+    } else {
+      user.savedAds.push(adId as any);
+    }
+    
+    await user.save();
+    res.json({ isSaved: !isSaved, savedAds: user.savedAds });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};

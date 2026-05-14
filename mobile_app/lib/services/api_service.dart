@@ -422,6 +422,38 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> toggleLikeAd(String adId, bool isLiked) async {
+    final token = await getToken();
+    final response = await http.put(
+      Uri.parse('$baseUrl/ads/$adId/like'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token'
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to toggle like on ad');
+    }
+  }
+
+  static Future<Map<String, dynamic>> toggleSaveAd(String adId) async {
+    final token = await getToken();
+    final response = await http.put(
+      Uri.parse('$baseUrl/auth/save/ads/$adId'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token'
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to toggle save ad');
+    }
+  }
+
   static Future<Map<String, dynamic>> toggleLikeReel(String reelId, bool isLiked) async {
     final token = await getToken();
     final action = isLiked ? 'like' : 'unlike';

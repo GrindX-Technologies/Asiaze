@@ -7,6 +7,8 @@ export interface IAd extends Document {
   linkUrl?: string;
   isActive: boolean;
   createdBy: mongoose.Types.ObjectId;
+  likes: number;
+  likedBy: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,6 +21,8 @@ const adSchema = new Schema(
     linkUrl: { type: String },
     isActive: { type: Boolean, default: true },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    likes: { type: Number, default: 0 },
+    likedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   },
   { timestamps: true }
 );

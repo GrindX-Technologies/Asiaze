@@ -26,13 +26,17 @@ class SavedReelsService {
     
     // Sync to backend
     try {
-      await ApiService.toggleSaveReel(reel['id'] ?? reel['_id'] ?? '');
+      if (reel['isAd'] == true) {
+        await ApiService.toggleSaveAd(reel['id'] ?? reel['_id'] ?? '');
+      } else {
+        await ApiService.toggleSaveReel(reel['id'] ?? reel['_id'] ?? '');
+      }
     } catch (e) {
       debugPrint("Failed to sync save reel to backend: $e");
     }
   }
 
-  static Future<void> removeReel(String id) async {
+  static Future<void> removeReel(String id, {bool isAd = false}) async {
     final prefs = await SharedPreferences.getInstance();
     final reels = await getSavedReels();
     
@@ -41,7 +45,11 @@ class SavedReelsService {
     
     // Sync to backend
     try {
-      await ApiService.toggleSaveReel(id);
+      if (isAd) {
+        await ApiService.toggleSaveAd(id);
+      } else {
+        await ApiService.toggleSaveReel(id);
+      }
     } catch (e) {
       debugPrint("Failed to sync remove reel to backend: $e");
     }

@@ -304,20 +304,21 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
     
     // Also check local liked status
     final prefs = await SharedPreferences.getInstance();
-    final likedReels = prefs.getStringList('likedReels') ?? [];
     final reelId = widget.reel['id'] ?? widget.reel['_id'] ?? '';
+    final key = widget.reel['isAd'] == true ? 'likedAds' : 'likedReels';
+    final likedItems = prefs.getStringList(key) ?? [];
     
     if (mounted) {
       setState(() {
         _isSaved = saved;
-        _isLiked = likedReels.contains(reelId);
+        _isLiked = likedItems.contains(reelId);
       });
     }
   }
 
   Future<void> _toggleSave() async {
     if (_isSaved) {
-      await SavedReelsService.removeReel(widget.reel['id'] ?? '');
+      await SavedReelsService.removeReel(widget.reel['id'] ?? '', isAd: widget.reel['isAd'] == true);
     } else {
       await SavedReelsService.saveReel(widget.reel);
       _saveAnimController.forward(from: 0.0);
@@ -360,17 +361,23 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
 
     try {
       final reelId = widget.reel['id'] ?? widget.reel['_id'] ?? '';
-      final response = await ApiService.toggleLikeReel(reelId, _isLiked);
+      Map<String, dynamic> response;
+      if (widget.reel['isAd'] == true) {
+        response = await ApiService.toggleLikeAd(reelId, _isLiked);
+      } else {
+        response = await ApiService.toggleLikeReel(reelId, _isLiked);
+      }
       
       // Update local storage
       final prefs = await SharedPreferences.getInstance();
-      final likedReels = prefs.getStringList('likedReels') ?? [];
-      if (_isLiked && !likedReels.contains(reelId)) {
-        likedReels.add(reelId);
-      } else if (!_isLiked && likedReels.contains(reelId)) {
-        likedReels.remove(reelId);
+      final key = widget.reel['isAd'] == true ? 'likedAds' : 'likedReels';
+      final likedItems = prefs.getStringList(key) ?? [];
+      if (_isLiked && !likedItems.contains(reelId)) {
+        likedItems.add(reelId);
+      } else if (!_isLiked && likedItems.contains(reelId)) {
+        likedItems.remove(reelId);
       }
-      await prefs.setStringList('likedReels', likedReels);
+      await prefs.setStringList(key, likedItems);
 
       if (mounted && response['likes'] != null) {
         setState(() {
@@ -598,6 +605,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
           child: Column(
             children: [
               GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: _toggleLike,
                 child: _buildActionButton(
                   _isLiked ? Icons.favorite : Icons.favorite_border,
@@ -607,6 +615,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
               ),
               const SizedBox(height: 24),
               GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: _toggleSave,
                 child: ScaleTransition(
                   scale: _scaleAnimation,
@@ -618,6 +627,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
               ),
               const SizedBox(height: 24),
               GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: _shareReel,
                 child: _buildActionButton(Icons.send, null),
               ),
@@ -705,10 +715,17 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
               ),
               if (widget.reel['articleLink'] != null && widget.reel['articleLink'].toString().isNotEmpty)
                 GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () async {
-                    final url = widget.reel['articleLink'];
-                    if (await canLaunchUrl(Uri.parse(url))) {
-                      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                    String url = widget.reel['articleLink'];
+                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                      url = 'https://$url';
+                    }
+                    final uri = Uri.parse(url);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    } else {
+                      debugPrint('Could not launch $url');
                     }
                   },
                   child: Container(

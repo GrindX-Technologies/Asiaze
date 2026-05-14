@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, register, getProfile, updateProfile, forgotPassword, googleAuth, toggleSaveNews, toggleSaveReel } from '../controllers/authController';
+import { login, register, getProfile, updateProfile, forgotPassword, googleAuth, toggleSaveNews, toggleSaveReel, toggleSaveAd } from '../controllers/authController';
 import { protect } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -14,5 +14,6 @@ router.route('/profile')
 
 router.put('/save/news/:id', protect, toggleSaveNews);
 router.put('/save/reels/:id', protect, toggleSaveReel);
+router.put('/save/ads/:id', protect, toggleSaveAd);
 
 export default router;
