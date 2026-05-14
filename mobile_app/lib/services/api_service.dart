@@ -17,7 +17,7 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     String? deviceId = prefs.getString('deviceId');
     if (deviceId == null) {
-      deviceId = DateTime.now().millisecondsSinceEpoch.toString() + '_' + (1000 + (DateTime.now().microsecond % 9000)).toString();
+      deviceId = '${DateTime.now().millisecondsSinceEpoch}_${1000 + (DateTime.now().microsecond % 9000)}';
       await prefs.setString('deviceId', deviceId);
     }
     return deviceId;
