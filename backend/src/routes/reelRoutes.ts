@@ -1,5 +1,5 @@
 import express from 'express';
-import { getReels, createReel, getReelById, updateReel, deleteReel, toggleLikeReel } from '../controllers/reelController';
+import { getReels, createReel, getReelById, updateReel, deleteReel, toggleLikeReel, recordReelView } from '../controllers/reelController';
 import { protect, admin } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -10,6 +10,9 @@ router.route('/')
 
 router.route('/:id/like')
   .put(protect, toggleLikeReel);
+
+router.route('/:id/view')
+  .post(recordReelView);
 
 router.route('/:id')
   .get(getReelById)

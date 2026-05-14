@@ -139,3 +139,26 @@ export const toggleLikeReel = async (req: Request, res: Response): Promise<void>
     res.status(500).json({ message: error.message });
   }
 };
+
+export const recordReelView = async (req: Request, res: Response) => {
+  try {
+    const reel = await Reel.findById(req.params.id);
+    if (!reel) return res.status(404).json({ message: 'Reel not found' });
+
+    const userIdOrDeviceId = req.body.deviceId || ((req as any).user ? (req as any).user._id.toString() : null);
+
+    if (!userIdOrDeviceId) {
+      return res.status(400).json({ message: 'Missing deviceId or user auth' });
+    }
+
+    if (!reel.viewedBy.includes(userIdOrDeviceId)) {
+      reel.viewedBy.push(userIdOrDeviceId);
+      reel.views = (reel.views || 0) + 1;
+      await reel.save();
+    }
+
+    res.json(reel);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};

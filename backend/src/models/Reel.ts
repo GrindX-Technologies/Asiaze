@@ -9,6 +9,7 @@ export interface IReel extends Document {
   uploader: mongoose.Types.ObjectId;
   status: 'active' | 'inactive';
   views: number;
+  viewedBy: string[]; // To track unique views by device ID or user ID
   likes: number;
   shares: number;
   likedBy: mongoose.Types.ObjectId[];
@@ -26,6 +27,7 @@ const reelSchema = new Schema(
     uploader: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
     views: { type: Number, default: 0 },
+    viewedBy: [{ type: String }],
     likes: { type: Number, default: 0 },
     shares: { type: Number, default: 0 },
     likedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],

@@ -381,6 +381,23 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> recordReelView(String reelId, String deviceId) async {
+    final token = await getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/reels/$reelId/view'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token'
+      },
+      body: jsonEncode({'deviceId': deviceId}),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to record reel view');
+    }
+  }
+
   static Future<Map<String, dynamic>> toggleLikeReel(String reelId, bool isLiked) async {
     final token = await getToken();
     final action = isLiked ? 'like' : 'unlike';

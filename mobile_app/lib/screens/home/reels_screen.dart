@@ -223,6 +223,10 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
   
   late AnimationController _saveAnimController;
   late Animation<double> _scaleAnimation;
+  bool _hasRecordedView = false;
+  String _durationString = "00:00";
+  String _positionString = "00:00";
+  double _progressValue = 0.0;
 
   @override
   void initState() {
@@ -370,12 +374,47 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
         ..setLooping(true)
         ..initialize().then((_) {
           if (mounted) {
-            setState(() {});
+            setState(() {
+              _durationString = _formatDuration(_controller!.value.duration);
+            });
             _controller?.play();
+            _recordView();
           }
         }).catchError((e) {
           debugPrint("Video initialization error: $e");
         });
+        
+      _controller?.addListener(() {
+        if (mounted && _controller != null && _controller!.value.isInitialized) {
+          final position = _controller!.value.position;
+          final duration = _controller!.value.duration;
+          setState(() {
+            _positionString = _formatDuration(position);
+            _progressValue = duration.inMilliseconds > 0 
+                ? position.inMilliseconds / duration.inMilliseconds 
+                : 0.0;
+          });
+        }
+      });
+    }
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return "$minutes:$seconds";
+  }
+
+  Future<void> _recordView() async {
+    if (_hasRecordedView) return;
+    _hasRecordedView = true;
+    try {
+      final reelId = widget.reel['id'] ?? widget.reel['_id'] ?? '';
+      String deviceId = await ApiService.getDeviceId();
+      await ApiService.recordReelView(reelId, deviceId);
+    } catch (e) {
+      debugPrint('Failed to record reel view: $e');
     }
   }
 
@@ -587,15 +626,24 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
         Positioned(
           left: 16,
           right: 16,
-          bottom: 16,
+          bottom: 24, // Lifted up to make room for progress bar
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '${widget.reel['current']} / ${widget.reel['duration']}',
-                style: GoogleFonts.roboto(
-                  color: Colors.white,
-                  fontSize: 12,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xFF00FF00), width: 2), // Neon green highlight matching screenshot
+                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.black.withAlpha(150),
+                ),
+                child: Text(
+                  '$_positionString / $_durationString',
+                  style: GoogleFonts.roboto(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               Row(
@@ -619,11 +667,19 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
                       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                     }
                   },
-                  child: Text(
-                    widget.tTapToOpen,
-                    style: GoogleFonts.roboto(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
                       color: Colors.white,
-                      fontSize: 12,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      widget.tTapToOpen,
+                      style: GoogleFonts.roboto(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ),
@@ -631,21 +687,34 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
           ),
         ),
 
-        // Red Progress Bar (Simulated)
+        // True Bottom Progress Bar
         Positioned(
           left: 0,
           right: 0,
           bottom: 0,
-          child: Container(
-            height: 2,
-            width: double.infinity,
-            color: Colors.grey[800],
-            alignment: Alignment.centerLeft,
-            child: FractionallySizedBox(
-              widthFactor: 0.5, // e.g. 50% progress
-              child: Container(color: const Color(0xFFDC143C)),
-            ),
-          ),
+          child: _controller != null && _controller!.value.isInitialized
+              ? SliderTheme(
+                  data: SliderThemeData(
+                    trackHeight: 2,
+                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                    activeTrackColor: Colors.white,
+                    inactiveTrackColor: Colors.white.withAlpha(80),
+                    thumbColor: Colors.white,
+                  ),
+                  child: Slider(
+                    value: _progressValue,
+                    onChanged: (value) {
+                      setState(() {
+                        _progressValue = value;
+                      });
+                      final duration = _controller!.value.duration;
+                      final newPosition = duration * value;
+                      _controller!.seekTo(newPosition);
+                    },
+                  ),
+                )
+              : const SizedBox.shrink(),
         ),
       ],
     );
