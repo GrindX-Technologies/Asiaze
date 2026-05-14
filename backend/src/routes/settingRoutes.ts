@@ -5,7 +5,7 @@ import { protect, admin } from '../middleware/authMiddleware';
 const router = express.Router();
 
 router.route('/')
-  .get(protect, admin, getSettings)
+  .get(getSettings) // Make public so mobile app can fetch configs (like ad frequency)
   .post(protect, admin, updateSetting);
 
 export default router;
