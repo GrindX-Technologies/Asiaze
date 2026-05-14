@@ -504,24 +504,6 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
           ),
         ),
 
-        // Back button for navigation
-        if (Navigator.canPop(context))
-          Positioned(
-            top: 50, // Safe area top margin
-            left: 16,
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withAlpha(100),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
-              ),
-            ),
-          ),
-
         // Top Header
         SafeArea(
           child: Padding(
@@ -529,10 +511,20 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
-                ),
+                if (Navigator.canPop(context))
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withAlpha(100),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                    ),
+                  )
+                else
+                  const SizedBox(width: 40), // Placeholder to keep logo centered
                 SizedBox(
                   height: 36,
                   child: Image.asset(
