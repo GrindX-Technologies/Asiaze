@@ -47,6 +47,10 @@ const sidebarNavItems = [
     href: "/dashboard/rewards",
   },
   {
+    title: "Ads Management",
+    href: "/dashboard/ads",
+  },
+  {
     title: "Notifications",
     href: "/dashboard/notifications",
     items: [

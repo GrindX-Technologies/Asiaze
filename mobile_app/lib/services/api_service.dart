@@ -297,6 +297,30 @@ class ApiService {
     await prefs.setString('language', lang);
   }
 
+  static Future<List<dynamic>> getSettings() async {
+    final response = await http.get(Uri.parse('$baseUrl/settings'));
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load settings');
+    }
+  }
+
+  static Future<List<dynamic>> getAds({String? type, bool? isActive}) async {
+    List<String> queryParams = [];
+    if (type != null) queryParams.add('type=$type');
+    if (isActive != null) queryParams.add('isActive=$isActive');
+    
+    final queryStr = queryParams.isNotEmpty ? '?${queryParams.join('&')}' : '';
+    final response = await http.get(Uri.parse('$baseUrl/ads$queryStr'));
+    
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load ads');
+    }
+  }
+
   static Future<List<dynamic>> getNews({String? state, String? category, bool? isBreaking}) async {
     final token = await getToken();
     

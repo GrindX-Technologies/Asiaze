@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface ISetting extends Document {
   key: string;
   value: any;
-  group: 'general' | 'points' | 'policies' | 'social';
+  group: 'general' | 'points' | 'policies' | 'social' | 'ads';
   description?: string;
   updatedBy: mongoose.Types.ObjectId;
   createdAt: Date;
@@ -16,7 +16,7 @@ const settingSchema = new Schema(
     value: { type: Schema.Types.Mixed, required: true },
     group: { 
       type: String, 
-      enum: ['general', 'points', 'policies', 'social'], 
+      enum: ['general', 'points', 'policies', 'social', 'ads'], 
       required: true 
     },
     description: { type: String },

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../widgets/news_card.dart';
+import '../../widgets/ad_card.dart';
 import '../../widgets/breaking_news_ticker.dart';
 import '../explore/search_explore_screen.dart';
 import 'article_detail_screen.dart';
@@ -163,6 +164,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         state: apiQueryState.isNotEmpty ? apiQueryState : null,
         category: apiQueryCategory.isNotEmpty ? apiQueryCategory : null,
       );
+
+      // Fetch ads and settings
+      int feedAdFreq = 5;
+      List<dynamic> feedAds = [];
+      try {
+        final settings = await ApiService.getSettings();
+        for (var s in settings) {
+          if (s['key'] == 'ad_frequency_feed') {
+            feedAdFreq = int.tryParse(s['value'].toString()) ?? 5;
+          }
+        }
+        feedAds = await ApiService.getAds(type: 'feed', isActive: true);
+      } catch (e) {
+        debugPrint('Failed to load ads or settings: $e');
+      }
       
       List<dynamic> mappedData = [];
       for (var item in data) {
@@ -201,6 +217,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           if (!aIsSelected && bIsSelected) return 1;
           return 0; // Keep original date sort if both match or both don't match
         });
+      }
+
+      // Inject ads
+      if (feedAds.isNotEmpty && feedAdFreq > 0) {
+        List<dynamic> withAds = [];
+        int adIndex = 0;
+        for (int i = 0; i < mappedData.length; i++) {
+          withAds.add(mappedData[i]);
+          if ((i + 1) % feedAdFreq == 0) {
+            final ad = feedAds[adIndex % feedAds.length];
+            withAds.add({'isAd': true, ...ad});
+            adIndex++;
+          }
+        }
+        mappedData = withAds;
       }
       
       if (!mounted) return;
@@ -413,6 +444,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
               ],
             ),
+          );
+        }
+
+        if (_feedData[index]['isAd'] == true) {
+          return Center(
+            child: AdCard(ad: _feedData[index]),
           );
         }
 

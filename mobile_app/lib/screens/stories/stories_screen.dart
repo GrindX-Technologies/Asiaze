@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/api_service.dart';
 import '../../services/translation_service.dart';
@@ -30,6 +31,8 @@ class StoryGroupData {
   int likes;
   int views;
   bool isLikedByMe;
+  final bool isAd;
+  final String? adLink;
 
   StoryGroupData({
     required this.id,
@@ -37,6 +40,8 @@ class StoryGroupData {
     this.likes = 0,
     this.views = 0,
     this.isLikedByMe = false,
+    this.isAd = false,
+    this.adLink,
   });
 }
 
@@ -84,6 +89,21 @@ class _StoriesScreenState extends State<StoriesScreen> {
     try {
       final data = await ApiService.getStories();
       
+      // Fetch settings and ads
+      int storyAdFreq = 3;
+      List<dynamic> storyAds = [];
+      try {
+        final settings = await ApiService.getSettings();
+        for (var s in settings) {
+          if (s['key'] == 'ad_frequency_story') {
+            storyAdFreq = int.tryParse(s['value'].toString()) ?? 3;
+          }
+        }
+        storyAds = await ApiService.getAds(type: 'story', isActive: true);
+      } catch (e) {
+        debugPrint('Failed to load ads or settings: $e');
+      }
+
       List<StoryGroupData> mappedStories = [];
       for (var group in data) {
         // Double check status client-side to ensure draft stories are never displayed
@@ -122,6 +142,36 @@ class _StoriesScreenState extends State<StoriesScreen> {
         }
       }
       
+      // Inject ads
+      if (storyAds.isNotEmpty && storyAdFreq > 0) {
+        List<StoryGroupData> withAds = [];
+        int adIndex = 0;
+        for (int i = 0; i < mappedStories.length; i++) {
+          withAds.add(mappedStories[i]);
+          if ((i + 1) % storyAdFreq == 0) {
+            final ad = storyAds[adIndex % storyAds.length];
+            final String mediaUrl = ad['mediaUrl'] ?? '';
+            final url = mediaUrl.startsWith('http') ? mediaUrl : 'https://asiaze.cloud$mediaUrl';
+            withAds.add(StoryGroupData(
+              id: ad['_id'] ?? 'ad_$adIndex',
+              isAd: true,
+              adLink: ad['linkUrl'],
+              pages: [
+                StoryPageData(
+                  imageUrl: url,
+                  category: 'SPONSORED',
+                  title: ad['title'] ?? 'Advertisement',
+                  byline: 'By SPONSOR',
+                  description: 'Sponsored Content',
+                )
+              ],
+            ));
+            adIndex++;
+          }
+        }
+        mappedStories = withAds;
+      }
+
       if (mounted) {
         setState(() {
           _stories = mappedStories;
@@ -539,6 +589,37 @@ class _StoryGroupViewState extends State<StoryGroupView> with SingleTickerProvid
                           height: 1.5,
                         ),
                       ),
+                      if (widget.storyGroup.isAd && widget.storyGroup.adLink != null && widget.storyGroup.adLink!.isNotEmpty)
+                        GestureDetector(
+                          onTap: () async {
+                            if (await canLaunchUrl(Uri.parse(widget.storyGroup.adLink!))) {
+                              await launchUrl(Uri.parse(widget.storyGroup.adLink!), mode: LaunchMode.externalApplication);
+                            }
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(top: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "Tap to open link",
+                                  style: GoogleFonts.roboto(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.open_in_new, size: 16, color: Colors.black),
+                              ],
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),

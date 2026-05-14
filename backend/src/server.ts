@@ -15,6 +15,9 @@ import settingRoutes from './routes/settingRoutes';
 import couponRoutes from './routes/couponRoutes';
 import storyRoutes from './routes/storyRoutes';
 import tagRoutes from './routes/tagRoutes';
+import adRoutes from './routes/adRoutes';
+
+dotenv.config();
 
 // Models
 import './models/Tag';
@@ -42,6 +45,7 @@ app.use('/api/settings', settingRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/tags', tagRoutes);
+app.use('/api/ads', adRoutes);
 
 app.use('/api/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 

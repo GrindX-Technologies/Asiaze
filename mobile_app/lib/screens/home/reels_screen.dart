@@ -58,6 +58,21 @@ class _ReelsScreenState extends State<ReelsScreen> {
     try {
       final data = await ApiService.getReels();
       
+      // Fetch settings and ads
+      int reelAdFreq = 5;
+      List<dynamic> reelAds = [];
+      try {
+        final settings = await ApiService.getSettings();
+        for (var s in settings) {
+          if (s['key'] == 'ad_frequency_reel') {
+            reelAdFreq = int.tryParse(s['value'].toString()) ?? 5;
+          }
+        }
+        reelAds = await ApiService.getAds(type: 'reel', isActive: true);
+      } catch (e) {
+        debugPrint('Failed to load ads or settings: $e');
+      }
+
       List<dynamic> mappedData = [];
       for (var item in data) {
         String title = item['title'] ?? 'No Title';
@@ -81,6 +96,31 @@ class _ReelsScreenState extends State<ReelsScreen> {
           'duration': '01:00', // Placeholder
           'current': '00:00',  // Placeholder
         });
+      }
+
+      // Inject ads
+      if (reelAds.isNotEmpty && reelAdFreq > 0) {
+        List<dynamic> withAds = [];
+        int adIndex = 0;
+        for (int i = 0; i < mappedData.length; i++) {
+          withAds.add(mappedData[i]);
+          if ((i + 1) % reelAdFreq == 0) {
+            final ad = reelAds[adIndex % reelAds.length];
+            withAds.add({
+              'id': ad['_id'] ?? 'ad_$adIndex',
+              'isAd': true,
+              'title': ad['title'] ?? 'Advertisement',
+              'source': 'SPONSOR',
+              'time': 'Sponsored',
+              'description': 'Sponsored Content',
+              'likes': '0',
+              'videoUrl': ad['mediaUrl'],
+              'articleLink': ad['linkUrl'],
+            });
+            adIndex++;
+          }
+        }
+        mappedData = withAds;
       }
       
       if (!mounted) return;
@@ -226,6 +266,8 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
   bool _hasRecordedView = false;
   double _progressValue = 0.0;
 
+  bool _isImageAd = false;
+
   @override
   void initState() {
     super.initState();
@@ -245,7 +287,16 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
     ));
 
     _checkSavedStatus();
-    _initializeVideo();
+    
+    if (widget.reel['isAd'] == true && widget.reel['videoUrl'] != null && 
+        !widget.reel['videoUrl'].toString().toLowerCase().endsWith('.mp4') &&
+        !widget.reel['videoUrl'].toString().toLowerCase().endsWith('.mov')) {
+      _isImageAd = true;
+      _hasRecordedView = true; // no need to record view for image ads or record it here
+      _recordView();
+    } else {
+      _initializeVideo();
+    }
   }
 
   Future<void> _checkSavedStatus() async {
@@ -424,7 +475,14 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
           width: double.infinity,
           height: double.infinity,
           color: Colors.grey[900],
-          child: _controller != null && _controller!.value.isInitialized
+          child: _isImageAd 
+            ? Image.network(
+                widget.reel['videoUrl'].toString().startsWith('http') 
+                  ? widget.reel['videoUrl'] 
+                  : 'https://asiaze.cloud${widget.reel['videoUrl']}',
+                fit: BoxFit.cover,
+              )
+            : _controller != null && _controller!.value.isInitialized
               ? GestureDetector(
                   onTap: () {
                     setState(() {
@@ -469,7 +527,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
         ),
 
         // Play/Pause icon overlay
-        if (!_isPlaying)
+        if (!_isPlaying && !_isImageAd)
           Center(
             child: Icon(Icons.play_arrow, color: Colors.white.withAlpha(150), size: 80),
           ),
@@ -522,10 +580,12 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
                     fit: BoxFit.contain,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(_isMuted ? Icons.volume_off : Icons.volume_up, color: Colors.white),
-                  onPressed: _toggleMute, // Toggle mute
-                ),
+                _isImageAd 
+                  ? const SizedBox(width: 40)
+                  : IconButton(
+                      icon: Icon(_isMuted ? Icons.volume_off : Icons.volume_up, color: Colors.white),
+                      onPressed: _toggleMute, // Toggle mute
+                    ),
               ],
             ),
           ),
@@ -573,6 +633,23 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (widget.reel['isAd'] == true)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDC143C),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'SPONSORED',
+                    style: GoogleFonts.roboto(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               Text(
                 widget.reel['title'],
                 style: GoogleFonts.roboto(
