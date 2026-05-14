@@ -224,7 +224,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Image.network(
-                                  imageUrl,
+                                  imageUrl.startsWith('http') ? imageUrl : 'https://asiaze.cloud$imageUrl',
                                   fit: BoxFit.contain,
                                   errorBuilder: (context, error, stackTrace) {
                                     return const Icon(Icons.image, color: Colors.grey);
