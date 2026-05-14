@@ -15,6 +15,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
   String _referralCode = '';
   List<dynamic> _availableRewards = [];
   bool _isLoading = true;
+  final Set<String> _redeemedCoupons = {};
 
   @override
   void initState() {
@@ -259,53 +260,128 @@ class _RewardsScreenState extends State<RewardsScreen> {
                               ),
                             ),
                             
-                            // Redeem Button
-                            ElevatedButton(
-                              onPressed: canRedeem ? () {
-                                // Show redemption dialog or handle redemption
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('Redeem Reward'),
-                                    content: Text('Are you sure you want to redeem this reward for $requiredPts points?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('Cancel'),
+                              // Redeem / Code Button
+                              _redeemedCoupons.contains(reward['_id']) 
+                                ? GestureDetector(
+                                    onTap: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: Text('Your Coupon Code', style: GoogleFonts.lexendDeca(fontWeight: FontWeight.bold)),
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text('Use the following code to claim your reward:', style: GoogleFonts.roboto()),
+                                              const SizedBox(height: 16),
+                                              Container(
+                                                padding: const EdgeInsets.all(16),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFF3F4F6),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(color: const Color(0xFFDC143C).withAlpha(50)),
+                                                ),
+                                                child: Text(
+                                                  reward['code'] ?? 'CODE-UNAVAILABLE',
+                                                  style: GoogleFonts.robotoMono(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context),
+                                              child: const Text('Close', style: TextStyle(color: Colors.grey)),
+                                            ),
+                                            ElevatedButton.icon(
+                                              onPressed: () {
+                                                Clipboard.setData(ClipboardData(text: reward['code'] ?? ''));
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('Coupon code copied to clipboard!')),
+                                                );
+                                                Navigator.pop(context);
+                                              },
+                                              icon: const Icon(Icons.copy, size: 16),
+                                              label: const Text('Copy Code'),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(0xFFDC143C),
+                                                foregroundColor: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFDC143C).withAlpha(20),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: const Color(0xFFDC143C)),
                                       ),
-                                      TextButton(
-                                        onPressed: () {
-                                          // API call for processing redemption
-                                          Navigator.pop(context);
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text('Redemption requested!')),
-                                          );
-                                        },
-                                        child: const Text('Redeem', style: TextStyle(color: Color(0xFFDC143C))),
+                                      child: Text(
+                                        'REDEEM THE OFFER NOW',
+                                        style: GoogleFonts.roboto(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          color: const Color(0xFFDC143C),
+                                        ),
                                       ),
-                                    ],
+                                    ),
+                                  )
+                                : ElevatedButton(
+                                    onPressed: canRedeem ? () {
+                                      // Show redemption dialog or handle redemption
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text('Redeem Reward'),
+                                          content: Text('Are you sure you want to redeem this reward for $requiredPts points?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context),
+                                              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                // API call for processing redemption (Mocking success here)
+                                                setState(() {
+                                                  _currentPoints -= requiredPts;
+                                                  _redeemedCoupons.add(reward['_id']);
+                                                });
+                                                Navigator.pop(context);
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('Redemption successful!')),
+                                                );
+                                              },
+                                              child: const Text('Redeem', style: TextStyle(color: Color(0xFFDC143C))),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    } : null,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: canRedeem 
+                                          ? const Color(0xFFDC143C) 
+                                          : const Color(0xFFE5B0B8), // Muted red if disabled
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      elevation: 0,
+                                    ),
+                                    child: Text(
+                                      'Redeem',
+                                      style: GoogleFonts.roboto(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
                                   ),
-                                );
-                              } : null,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: canRedeem 
-                                    ? const Color(0xFFDC143C) 
-                                    : const Color(0xFFE5B0B8), // Muted red if disabled
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: Text(
-                                'Redeem',
-                                style: GoogleFonts.roboto(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                       );
