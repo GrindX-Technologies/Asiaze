@@ -224,8 +224,6 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
   late AnimationController _saveAnimController;
   late Animation<double> _scaleAnimation;
   bool _hasRecordedView = false;
-  String _durationString = "00:00";
-  String _positionString = "00:00";
   double _progressValue = 0.0;
 
   @override
@@ -375,7 +373,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
         ..initialize().then((_) {
           if (mounted) {
             setState(() {
-              _durationString = _formatDuration(_controller!.value.duration);
+              // Duration string removed
             });
             _controller?.play();
             _recordView();
@@ -389,7 +387,6 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
           final position = _controller!.value.position;
           final duration = _controller!.value.duration;
           setState(() {
-            _positionString = _formatDuration(position);
             _progressValue = duration.inMilliseconds > 0 
                 ? position.inMilliseconds / duration.inMilliseconds 
                 : 0.0;
@@ -397,13 +394,6 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
         }
       });
     }
-  }
-
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return "$minutes:$seconds";
   }
 
   Future<void> _recordView() async {
@@ -622,22 +612,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFF00FF00), width: 2), // Neon green highlight matching screenshot
-                  borderRadius: BorderRadius.circular(16),
-                  color: Colors.black.withAlpha(150),
-                ),
-                child: Text(
-                  '$_positionString / $_durationString',
-                  style: GoogleFonts.roboto(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
+              const SizedBox.shrink(), // Preserves layout alignment after removing the sticky counter
               Row(
                 children: [
                   Text(
