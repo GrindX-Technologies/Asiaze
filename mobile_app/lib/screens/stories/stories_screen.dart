@@ -409,6 +409,14 @@ class _StoryGroupViewState extends State<StoryGroupView> with SingleTickerProvid
   }
 
   void _onTapUp(TapUpDetails details) {
+    // If the tap occurred near the bottom of the screen (where the link/like buttons are),
+    // we don't trigger the global story navigation to prevent hijacking the button taps.
+    final double screenHeight = MediaQuery.of(context).size.height;
+    if (details.globalPosition.dy > screenHeight - 150) {
+      _animController.forward();
+      return;
+    }
+
     final double screenWidth = MediaQuery.of(context).size.width;
     final double dx = details.globalPosition.dx;
 
@@ -454,6 +462,7 @@ class _StoryGroupViewState extends State<StoryGroupView> with SingleTickerProvid
     return GestureDetector(
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
+      onTapCancel: () => _animController.forward(),
       onLongPress: _onLongPress,
       onLongPressEnd: _onLongPressEnd,
       child: Stack(
@@ -494,7 +503,7 @@ class _StoryGroupViewState extends State<StoryGroupView> with SingleTickerProvid
             ),
           ),
 
-          // Content
+          // UI Overlay wrapped in a SafeArea and placed above the gesture detector
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,6 +600,7 @@ class _StoryGroupViewState extends State<StoryGroupView> with SingleTickerProvid
                       ),
                       if (widget.storyGroup.isAd && widget.storyGroup.adLink != null && widget.storyGroup.adLink!.isNotEmpty)
                         GestureDetector(
+                          behavior: HitTestBehavior.opaque,
                           onTap: () async {
                             if (await canLaunchUrl(Uri.parse(widget.storyGroup.adLink!))) {
                               await launchUrl(Uri.parse(widget.storyGroup.adLink!), mode: LaunchMode.externalApplication);
@@ -643,27 +653,30 @@ class _StoryGroupViewState extends State<StoryGroupView> with SingleTickerProvid
                       ),
                       const SizedBox(width: 16),
                       // Like button and counter
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _toggleLike,
+                        child: Row(
+                          children: [
+                            Icon(
                               widget.storyGroup.isLikedByMe ? Icons.favorite : Icons.favorite_border,
                               color: widget.storyGroup.isLikedByMe ? Colors.red : Colors.white,
                               size: 28,
                             ),
-                            onPressed: _toggleLike,
-                          ),
-                          Text(
-                            '${widget.storyGroup.likes}',
-                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            Text(
+                              '${widget.storyGroup.likes}',
+                              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
                       ),
                       const Spacer(),
                       // Share button
-                      IconButton(
-                        icon: const Icon(Icons.share, color: Colors.white, size: 28),
-                        onPressed: _shareStory,
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _shareStory,
+                        child: const Icon(Icons.share, color: Colors.white, size: 28),
                       ),
                     ],
                   ),
