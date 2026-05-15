@@ -1,2 +1,8 @@
 node_modules/
 deployment.tar.gz
+backend/asiaze2026-firebase-adminsdk-fbsvc-61a9410fd0.json
+mobile_app/android/app/google-services.json
+mobile_app/ios/Runner/GoogleService-Info.plist
+deployment_admin.tar.gz
+deployment_all.tar.gz
+backend/.env

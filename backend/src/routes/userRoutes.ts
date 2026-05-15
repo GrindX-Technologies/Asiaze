@@ -1,11 +1,14 @@
 import express from 'express';
-import { getUsers, updateUserStatus, createUser, updateUser, getUserRewards, bulkUpdateStatus, deleteUsers, addSharePoints } from '../controllers/userController';
+import { getUsers, updateUserStatus, createUser, updateUser, getUserRewards, bulkUpdateStatus, deleteUsers, addSharePoints, updateDeviceToken } from '../controllers/userController';
 import { protect, admin } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
 router.route('/share')
   .post(protect, addSharePoints);
+
+router.route('/fcm-token')
+  .put(protect, updateDeviceToken);
 
 router.route('/rewards')
   .get(protect, getUserRewards);

@@ -12,6 +12,7 @@ import '../profile/profile_screen.dart';
 import '../stories/stories_screen.dart';
 import '../../services/api_service.dart';
 import '../../services/translation_service.dart';
+import '../../services/push_notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -59,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     _initData();
+    PushNotificationService.initialize();
   }
 
   @override

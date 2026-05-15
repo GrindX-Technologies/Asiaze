@@ -31,6 +31,16 @@ export default function AdsManagementPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // View / Edit Ad state
+  const [selectedAd, setSelectedAd] = useState<any>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editType, setEditType] = useState("feed");
+  const [editLink, setEditLink] = useState("");
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -128,6 +138,11 @@ export default function AdsManagementPage() {
       return;
     }
     
+    let finalLinkUrl = adLink.trim();
+    if (finalLinkUrl && !/^https?:\/\//i.test(finalLinkUrl)) {
+      finalLinkUrl = `https://${finalLinkUrl}`;
+    }
+
     setIsUploading(true);
     try {
       const mediaUrl = await uploadFile(imageFile);
@@ -140,7 +155,7 @@ export default function AdsManagementPage() {
           title: adTitle,
           type: adType,
           mediaUrl,
-          linkUrl: adLink,
+          linkUrl: finalLinkUrl,
           isActive: true
         })
       });
@@ -151,6 +166,7 @@ export default function AdsManagementPage() {
         setAdLink("");
         setImageFile(null);
         fetchData();
+        alert("Advertisement created successfully!");
       } else {
         alert("Failed to create ad");
       }
@@ -159,6 +175,65 @@ export default function AdsManagementPage() {
       alert("Error uploading ad");
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleViewClick = (ad: any) => {
+    setSelectedAd(ad);
+    setIsViewModalOpen(true);
+  };
+
+  const handleEditClick = (ad: any) => {
+    setSelectedAd(ad);
+    setEditTitle(ad.title || "");
+    setEditType(ad.type || "feed");
+    setEditLink(ad.linkUrl || "");
+    setEditImageFile(null);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateAd = async () => {
+    if (!editTitle) {
+      alert("Title is required");
+      return;
+    }
+    
+    let finalEditLinkUrl = editLink.trim();
+    if (finalEditLinkUrl && !/^https?:\/\//i.test(finalEditLinkUrl)) {
+      finalEditLinkUrl = `https://${finalEditLinkUrl}`;
+    }
+
+    setIsUpdating(true);
+    try {
+      let mediaUrl = selectedAd.mediaUrl;
+      if (editImageFile) {
+        mediaUrl = await uploadFile(editImageFile);
+      }
+
+      const token = getCookie("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/ads/${selectedAd._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          title: editTitle,
+          type: editType,
+          mediaUrl,
+          linkUrl: finalEditLinkUrl,
+        })
+      });
+
+      if (res.ok) {
+        setIsEditModalOpen(false);
+        fetchData();
+        alert("Advertisement updated successfully!");
+      } else {
+        alert("Failed to update ad");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error updating ad");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -188,6 +263,11 @@ export default function AdsManagementPage() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const getFullMediaUrl = (url: string) => {
+    if (!url) return "";
+    return url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${url}`;
   };
 
   return (
@@ -290,7 +370,7 @@ export default function AdsManagementPage() {
                         <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-xs">Video</div>
                       ) : (
                         <img 
-                          src={ad.mediaUrl?.startsWith('http') ? ad.mediaUrl : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${ad.mediaUrl}`} 
+                          src={getFullMediaUrl(ad.mediaUrl)} 
                           className="w-12 h-12 object-cover rounded" 
                           alt="" 
                         />
@@ -305,7 +385,9 @@ export default function AdsManagementPage() {
                         {ad.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right space-x-2">
+                    <TableCell className="text-right space-x-2 whitespace-nowrap">
+                      <Button variant="outline" size="sm" onClick={() => handleViewClick(ad)}>View</Button>
+                      <Button variant="outline" size="sm" onClick={() => handleEditClick(ad)}>Edit</Button>
                       <Button 
                         variant="outline" 
                         size="sm"
@@ -328,6 +410,96 @@ export default function AdsManagementPage() {
           </Table>
         </div>
       </div>
+
+      {/* View Modal */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-white text-black">
+          <DialogHeader>
+            <DialogTitle className="text-black">View Advertisement</DialogTitle>
+          </DialogHeader>
+          {selectedAd && (
+            <div className="space-y-4 mt-4">
+              <div className="flex justify-center bg-gray-100 rounded-lg p-2">
+                {selectedAd.mediaUrl?.match(/\.(mp4|mov|avi)$/i) ? (
+                  <video src={getFullMediaUrl(selectedAd.mediaUrl)} controls className="max-h-64 rounded-md" />
+                ) : (
+                  <img src={getFullMediaUrl(selectedAd.mediaUrl)} alt={selectedAd.title} className="max-h-64 object-contain rounded-md" />
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 font-bold">Title</p>
+                  <p className="text-sm">{selectedAd.title}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-bold">Type / Placement</p>
+                  <Badge variant="outline" className="capitalize mt-1">{selectedAd.type}</Badge>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-bold">Status</p>
+                  <Badge className={selectedAd.isActive ? "bg-green-500 mt-1" : "bg-gray-400 mt-1"}>
+                    {selectedAd.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-bold">Created At</p>
+                  <p className="text-sm">{new Date(selectedAd.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-gray-500 font-bold">Link URL</p>
+                  <a href={selectedAd.linkUrl || "#"} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline break-all">
+                    {selectedAd.linkUrl || "No link provided"}
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-white text-black">
+          <DialogHeader>
+            <DialogTitle className="text-black">Edit Advertisement</DialogTitle>
+          </DialogHeader>
+          {selectedAd && (
+            <div className="space-y-4 mt-4">
+              <div>
+                <label className="text-sm font-bold text-black">Title</label>
+                <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="e.g. Summer Sale Promo" />
+              </div>
+              <div>
+                <label className="text-sm font-bold text-black">Ad Type / Placement</label>
+                <select 
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-black mt-1"
+                  value={editType} 
+                  onChange={(e) => setEditType(e.target.value)}
+                >
+                  <option value="feed">Feed Ad</option>
+                  <option value="story">Story Ad</option>
+                  <option value="reel">Reel Ad</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-bold text-black">Link URL (Optional)</label>
+                <Input value={editLink} onChange={(e) => setEditLink(e.target.value)} placeholder="https://..." />
+              </div>
+              <div>
+                <label className="text-sm font-bold text-black">Creative (Leave empty to keep current)</label>
+                <Input type="file" accept="image/*,video/mp4" onChange={(e) => setEditImageFile(e.target.files?.[0] || null)} />
+              </div>
+              <Button 
+                onClick={handleUpdateAd} 
+                disabled={isUpdating} 
+                className="w-full bg-[#E0202B] hover:bg-[#C11B24] text-white"
+              >
+                {isUpdating ? "Updating..." : "Save Changes"}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -714,33 +714,32 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
                 ],
               ),
               if (widget.reel['articleLink'] != null && widget.reel['articleLink'].toString().isNotEmpty)
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () async {
+                ElevatedButton(
+                  onPressed: () async {
                     String url = widget.reel['articleLink'];
                     if (!url.startsWith('http://') && !url.startsWith('https://')) {
                       url = 'https://$url';
                     }
                     final uri = Uri.parse(url);
-                    if (await canLaunchUrl(uri)) {
+                    try {
                       await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    } else {
-                      debugPrint('Could not launch $url');
+                    } catch (e) {
+                      debugPrint('Could not launch $url: $e');
                     }
                   },
-                  child: Container(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
+                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(
-                      widget.tTapToOpen,
-                      style: GoogleFonts.roboto(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
+                  ),
+                  child: Text(
+                    widget.reel['isAd'] == true ? "Tap To Open Link" : widget.tTapToOpen,
+                    style: GoogleFonts.roboto(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
                     ),
                   ),
                 ),

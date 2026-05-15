@@ -70,11 +70,12 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> googleLogin(String name, String email, String avatar, String googleId) async {
+  static Future<Map<String, dynamic>> googleLogin(String idToken, String name, String email, String avatar, String googleId) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/google'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
+        'idToken': idToken,
         'name': name,
         'email': email,
         'avatar': avatar,
@@ -208,6 +209,24 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to update profile');
+    }
+  }
+
+  static Future<void> updateDeviceToken(String fcmToken) async {
+    final token = await getToken();
+    if (token == null) return;
+    
+    final response = await http.put(
+      Uri.parse('$baseUrl/users/fcm-token'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token'
+      },
+      body: jsonEncode({'token': fcmToken}),
+    );
+    
+    if (response.statusCode != 200) {
+      debugPrint('Failed to update device token: ${response.body}');
     }
   }
 

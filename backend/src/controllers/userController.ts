@@ -217,3 +217,29 @@ export const deleteUsers = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Update device token for push notifications
+// @route   PUT /api/users/fcm-token
+// @access  Private
+export const updateDeviceToken = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      res.status(400).json({ message: 'Token is required' });
+      return;
+    }
+
+    const user = await User.findById((req as any).user._id);
+
+    if (user) {
+      user.deviceToken = token;
+      await user.save();
+      res.json({ message: 'Device token updated successfully' });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};

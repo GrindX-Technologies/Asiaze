@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../setup/preferences_screen.dart';
@@ -74,8 +75,16 @@ class _SignupScreenState extends State<SignupScreen> {
       );
     } catch (e) {
       if (!mounted) return;
+      final msg = e.toString().replaceAll('Exception: ', '');
+      String displayMsg = 'Sign-up failed. Please try again.';
+      if (msg.toLowerCase().contains('user already exists') || msg.toLowerCase().contains('email already in use')) {
+        displayMsg = 'Email already in use.';
+      } else if (msg.isNotEmpty) {
+        displayMsg = msg;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text(displayMsg)),
       );
     } finally {
       if (mounted) {
@@ -91,15 +100,24 @@ class _SignupScreenState extends State<SignupScreen> {
       _isLoading = true;
     });
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId: const String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: ''),
+      );
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) {
+        if (!mounted) return;
         setState(() => _isLoading = false);
         return; // The user canceled the sign-in
       }
 
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      if (googleAuth.idToken == null) {
+        throw Exception('Missing Google ID Token');
+      }
+
       await ApiService.googleLogin(
+        googleAuth.idToken!,
         googleUser.displayName ?? 'Google User',
         googleUser.email,
         googleUser.photoUrl ?? '',
@@ -112,10 +130,24 @@ class _SignupScreenState extends State<SignupScreen> {
         MaterialPageRoute(builder: (context) => const PreferencesScreen()),
         (route) => false,
       );
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      String errorMessage = 'Google Sign-In failed. Please try again.';
+      if (e.code == 'sign_in_failed') {
+        if (e.message?.contains('10') == true) {
+          errorMessage = 'Google Sign-In configuration error. Please update your Firebase SHA-1 keys and download the latest google-services.json.';
+        } else if (e.code == 'sign_in_canceled') {
+          errorMessage = 'Sign-in cancelled by user.';
+        }
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
     } catch (error) {
       if (!mounted) return;
+      final msg = error.toString().replaceAll('Exception: ', '');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google Sign-In failed: $error')),
+        SnackBar(content: Text(msg)),
       );
     } finally {
       if (mounted) {

@@ -12,10 +12,18 @@ class AdCard extends StatelessWidget {
     final url = mediaUrl.startsWith('http') ? mediaUrl : 'https://asiaze.cloud$mediaUrl';
     
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () async {
         if (ad['linkUrl'] != null && ad['linkUrl'].isNotEmpty) {
-          if (await canLaunchUrl(Uri.parse(ad['linkUrl']))) {
-            await launchUrl(Uri.parse(ad['linkUrl']), mode: LaunchMode.externalApplication);
+          String linkUrl = ad['linkUrl'];
+          if (!linkUrl.startsWith('http://') && !linkUrl.startsWith('https://')) {
+            linkUrl = 'https://$linkUrl';
+          }
+          final uri = Uri.parse(linkUrl);
+          try {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } catch (e) {
+            debugPrint('Could not launch $linkUrl: $e');
           }
         }
       },

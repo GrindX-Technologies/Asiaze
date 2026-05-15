@@ -93,7 +93,7 @@ export default function BreakingNewsPage() {
 
     try {
       const token = getCookie("token");
-      const res = await fetch(`/api/news/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/news/${id}`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",
@@ -103,10 +103,16 @@ export default function BreakingNewsPage() {
       });
 
       if (res.ok) {
-        setNews(news.map(n => n._id === id ? { ...n, isBreaking: !currentStatus } : n));
+        const updatedNews = news.map(n => n._id === id ? { ...n, isBreaking: !currentStatus } : n);
+        setNews(updatedNews);
+        alert(`Article successfully ${!currentStatus ? 'set as' : 'removed from'} breaking news!`);
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to update status: ${errorData.message || 'Unknown error'}`);
       }
     } catch (err) {
       console.error(err);
+      alert('An unexpected error occurred while updating the status.');
     }
   };
 

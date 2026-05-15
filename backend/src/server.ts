@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import connectDB from './config/db';
+import { initFirebase } from './config/firebaseConfig';
 
 // Route Imports
 import authRoutes from './routes/authRoutes';
@@ -16,6 +17,7 @@ import couponRoutes from './routes/couponRoutes';
 import storyRoutes from './routes/storyRoutes';
 import tagRoutes from './routes/tagRoutes';
 import adRoutes from './routes/adRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 
 dotenv.config();
 
@@ -26,6 +28,7 @@ dotenv.config();
 
 // Connect to MongoDB
 connectDB();
+initFirebase();
 
 const app: Application = express();
 
@@ -46,16 +49,17 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/ads', adRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use('/api/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Base Route
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_req: Request, res: Response) => {
   res.send('ASIAZE Backend API is running...');
 });
 
 // Error Handling Middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   res.status(statusCode).json({
     message: err.message,
@@ -68,3 +72,4 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
+

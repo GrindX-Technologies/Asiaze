@@ -599,34 +599,34 @@ class _StoryGroupViewState extends State<StoryGroupView> with SingleTickerProvid
                         ),
                       ),
                       if (widget.storyGroup.isAd && widget.storyGroup.adLink != null && widget.storyGroup.adLink!.isNotEmpty)
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () async {
-                            if (await canLaunchUrl(Uri.parse(widget.storyGroup.adLink!))) {
-                              await launchUrl(Uri.parse(widget.storyGroup.adLink!), mode: LaunchMode.externalApplication);
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            String url = widget.storyGroup.adLink!;
+                            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                              url = 'https://$url';
+                            }
+                            final uri = Uri.parse(url);
+                            try {
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            } catch (e) {
+                              debugPrint('Could not launch $url: $e');
                             }
                           },
-                          child: Container(
-                            margin: const EdgeInsets.only(top: 16),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
+                          icon: const Icon(Icons.open_in_new, size: 16, color: Colors.black),
+                          label: Text(
+                            "Tap to open link",
+                            style: GoogleFonts.roboto(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  "Tap to open link",
-                                  style: GoogleFonts.roboto(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Icon(Icons.open_in_new, size: 16, color: Colors.black),
-                              ],
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
                             ),
                           ),
                         ),

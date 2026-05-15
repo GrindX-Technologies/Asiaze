@@ -1,10 +1,33 @@
 import { Request, Response } from 'express';
+import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User';
 import { generateToken } from '../utils/generateToken';
 
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 export const googleAuth = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, avatar, googleId } = req.body;
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      res.status(400).json({ message: 'Google ID token is required' });
+      return;
+    }
+
+    // Verify the Google ID token
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      res.status(400).json({ message: 'Invalid Google token payload' });
+      return;
+    }
+
+    const { name, email, picture, sub: googleId } = payload;
+    const avatar = picture || '';
 
     let user = await User.findOne({ email });
 
@@ -44,7 +67,7 @@ export const googleAuth = async (req: Request, res: Response): Promise<void> => 
       const referralId = `REF${Math.floor(100000 + Math.random() * 900000)}`;
 
       user = await User.create({
-        name,
+        name: name || 'Google User',
         email,
         avatar,
         referralId,
@@ -63,7 +86,8 @@ export const googleAuth = async (req: Request, res: Response): Promise<void> => 
       });
     }
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    console.error('Google Auth Error:', error);
+    res.status(500).json({ message: 'Google authentication failed. Please try again.' });
   }
 };
 
