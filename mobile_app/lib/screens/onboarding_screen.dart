@@ -15,17 +15,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, String>> _onboardingData = [
     {
-      "image": "assets/images/onboarding_1.gif",
+      "image": "assets/News.gif",
       "headline": "Stay Updated in Seconds",
       "subtext": "Read short 60-word news summaries instantly",
     },
     {
-      "image": "assets/images/onboarding_2.gif",
+      "image": "assets/People watching the news.gif",
       "headline": "News in English, Hindi & Bengali",
       "subtext": "Read short 60-word news summaries instantly",
     },
     {
-      "image": "assets/images/onboarding_3.gif",
+      "image": "assets/Exciting news.gif",
       "headline": "Watch Short News Reels Instantly",
       "subtext": "Scroll through quick video updates anytime",
     }
@@ -148,19 +148,15 @@ class OnboardingContent extends StatelessWidget {
             height: 300, // Make it taller for the illustration
             width: double.infinity,
             decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(10),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(16),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Image.asset(
                 image,
                 fit: BoxFit.contain,
+                // These properties ensure the GIF loops smoothly and doesn't get distorted
+                gaplessPlayback: true,
                 errorBuilder: (context, error, stackTrace) {
                   // Fallback in case the file is not yet placed in assets
                   return Container(
