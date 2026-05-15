@@ -40,11 +40,13 @@ export const addSharePoints = async (req: Request, res: Response): Promise<void>
 // @access  Private
 export const getUserRewards = async (req: Request, res: Response): Promise<void> => {
   try {
-    const user = await User.findById((req as any).user._id).select('points referralId');
+    const user = await User.findById((req as any).user._id).select('points usedPoints referralId redeemedCoupons');
     if (user) {
       res.json({
         points: user.points,
+        usedPoints: user.usedPoints || 0,
         referralId: user.referralId,
+        redeemedCoupons: user.redeemedCoupons || [],
       });
     } else {
       res.status(404).json({ message: 'User not found' });

@@ -259,6 +259,23 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> redeemCoupon(String couponId) async {
+    final token = await getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/coupons/$couponId/redeem'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token'
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Failed to redeem coupon');
+    }
+  }
+
   static Future<List<dynamic>> getActiveCoupons() async {
     final token = await getToken();
     final response = await http.get(

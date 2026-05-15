@@ -31,6 +31,14 @@ class _RewardsScreenState extends State<RewardsScreen> {
         _currentPoints = rewardsData['points'] ?? 0;
         _referralCode = rewardsData['referralId'] ?? '';
         _availableRewards = couponsData;
+        
+        if (rewardsData['redeemedCoupons'] != null) {
+          _redeemedCoupons.clear();
+          for (var id in rewardsData['redeemedCoupons']) {
+            _redeemedCoupons.add(id.toString());
+          }
+        }
+        
         _isLoading = false;
       });
     } catch (e) {
@@ -346,16 +354,30 @@ class _RewardsScreenState extends State<RewardsScreen> {
                                               child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
                                             ),
                                             TextButton(
-                                              onPressed: () {
-                                                // API call for processing redemption (Mocking success here)
-                                                setState(() {
-                                                  _currentPoints -= requiredPts;
-                                                  _redeemedCoupons.add(reward['_id']);
-                                                });
-                                                Navigator.pop(context);
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  const SnackBar(content: Text('Redemption successful!')),
-                                                );
+                                              onPressed: () async {
+                                                final navigator = Navigator.of(context);
+                                                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                                                try {
+                                                  // API call for processing redemption
+                                                  final response = await ApiService.redeemCoupon(reward['_id']);
+                                                  if (mounted) {
+                                                    setState(() {
+                                                      _currentPoints = response['points'] ?? (_currentPoints - requiredPts);
+                                                      _redeemedCoupons.add(reward['_id']);
+                                                    });
+                                                    navigator.pop();
+                                                    scaffoldMessenger.showSnackBar(
+                                                      const SnackBar(content: Text('Redemption successful!')),
+                                                    );
+                                                  }
+                                                } catch (e) {
+                                                  if (mounted) {
+                                                    navigator.pop();
+                                                    scaffoldMessenger.showSnackBar(
+                                                      SnackBar(content: Text('Error: ${e.toString().replaceAll('Exception: ', '')}')),
+                                                    );
+                                                  }
+                                                }
                                               },
                                               child: const Text('Redeem', style: TextStyle(color: Color(0xFFDC143C))),
                                             ),

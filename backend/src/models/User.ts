@@ -13,6 +13,7 @@ export interface IUser extends Document {
   referralId: string;
   referredBy?: mongoose.Types.ObjectId;
   points: number;
+  usedPoints: number;
   isBlocked: boolean;
   deviceToken?: string;
   savedNews: mongoose.Types.ObjectId[];
@@ -21,6 +22,7 @@ export interface IUser extends Document {
   likedNews: mongoose.Types.ObjectId[];
   likedReels: mongoose.Types.ObjectId[];
   likedAds: mongoose.Types.ObjectId[];
+  redeemedCoupons: mongoose.Types.ObjectId[];
   loginHistory: Array<{
     ip: string;
     device: string;
@@ -44,6 +46,7 @@ const userSchema = new Schema(
     referralId: { type: String, unique: true, required: true },
     referredBy: { type: Schema.Types.ObjectId, ref: 'User' },
     points: { type: Number, default: 0 },
+    usedPoints: { type: Number, default: 0 },
     isBlocked: { type: Boolean, default: false },
     deviceToken: { type: String },
     savedNews: [{ type: Schema.Types.ObjectId, ref: 'News' }],
@@ -52,6 +55,7 @@ const userSchema = new Schema(
     likedNews: [{ type: Schema.Types.ObjectId, ref: 'News' }],
     likedReels: [{ type: Schema.Types.ObjectId, ref: 'Reel' }],
     likedAds: [{ type: Schema.Types.ObjectId, ref: 'Ad' }],
+    redeemedCoupons: [{ type: Schema.Types.ObjectId, ref: 'Coupon' }],
     loginHistory: [
       {
         ip: { type: String },
