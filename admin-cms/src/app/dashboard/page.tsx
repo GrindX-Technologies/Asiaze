@@ -140,7 +140,7 @@ export default function DashboardPage() {
         };
         processLineChart();
 
-        // Process bar chart data (Articles vs Videos engagement per day)
+        // Process bar chart data (Articles vs Videos engagement per day - Like Counts)
         const processBarChart = () => {
           const last7Days = Array.from({length: 7}, (_, i) => {
             const d = new Date();
@@ -152,13 +152,14 @@ export default function DashboardPage() {
             const dayNews = news.filter((n: NewsItem) => n.createdAt && n.createdAt.startsWith(dateStr));
             const dayReels = reels.filter((r: ReelItem) => r.createdAt && r.createdAt.startsWith(dateStr));
             
-            const articleEngagement = dayNews.reduce((sum: number, n: NewsItem) => sum + (n.views || 0) + (n.likes || 0), 0);
-            const videoEngagement = dayReels.reduce((sum: number, r: ReelItem) => sum + (r.views || 0) + (r.likes || 0), 0);
+            // Only aggregate like counts for accuracy
+            const articleLikes = dayNews.reduce((sum: number, n: NewsItem) => sum + (n.likes || 0), 0);
+            const videoLikes = dayReels.reduce((sum: number, r: ReelItem) => sum + (r.likes || 0), 0);
 
             return { 
               name: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }), 
-              articles: articleEngagement, 
-              videos: videoEngagement 
+              articles: articleLikes, 
+              videos: videoLikes 
             };
           });
           setBarChartData(data);
@@ -250,7 +251,7 @@ export default function DashboardPage() {
 
         <Card className="border-none shadow-sm bg-card text-card-foreground">
           <CardHeader>
-            <CardTitle className="text-base font-bold text-foreground">Article/Video Engagement</CardTitle>
+            <CardTitle className="text-base font-bold text-foreground">Article/Reel Engagement</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[250px] w-full">
