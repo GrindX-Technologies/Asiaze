@@ -60,8 +60,24 @@ export const getUserRewards = async (req: Request, res: Response): Promise<void>
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
   try {
     // Only return app users (role: 'user'), exclude admin users
-    const users = await User.find({ role: 'user' }).select('-password').sort({ createdAt: -1 });
-    res.json(users);
+    const users = await User.find({ role: 'user' })
+      .select('-password')
+      .populate('redeemedCoupons', 'title requiredPoints discount type isActive createdAt')
+      .sort({ createdAt: -1 });
+
+    // Ensure usedPoints is accurate by summing up redeemed coupons if there's a mismatch
+    const sanitizedUsers = users.map(user => {
+      const userObj = user.toObject();
+      if (userObj.redeemedCoupons && Array.isArray(userObj.redeemedCoupons)) {
+        const calculatedUsedPoints = userObj.redeemedCoupons.reduce((sum: number, coupon: any) => sum + (coupon.requiredPoints || 0), 0);
+        userObj.usedPoints = calculatedUsedPoints; // Enforce calculated total
+      } else {
+        userObj.usedPoints = 0;
+      }
+      return userObj;
+    });
+
+    res.json(sanitizedUsers);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

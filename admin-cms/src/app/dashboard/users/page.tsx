@@ -347,15 +347,37 @@ export default function UsersListPage() {
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
                     <p className="text-sm text-gray-600 font-medium">Total Redeemed</p>
-                    <p className="text-2xl text-gray-900 font-bold">0</p>
+                    <p className="text-2xl text-gray-900 font-bold">{viewingUser.usedPoints || 0}</p>
                   </div>
                 </div>
               </div>
               <div className="pt-4 border-t border-gray-100">
                 <h4 className="text-lg font-bold text-black mb-3">Recent Redeem Records</h4>
-                <div className="text-sm text-gray-500 text-center py-4 bg-gray-50 rounded-lg">
-                  No redemption records found.
-                </div>
+                {viewingUser.redeemedCoupons && viewingUser.redeemedCoupons.length > 0 ? (
+                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                    {viewingUser.redeemedCoupons.map((coupon: any, index: number) => (
+                      <div key={coupon._id || index} className="flex flex-col p-3 bg-gray-50 rounded-lg border border-gray-100">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="font-semibold text-black text-sm">{coupon.title || 'Unknown Reward'}</p>
+                            <p className="text-xs text-gray-500 mt-1 font-mono">ID: {coupon._id}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[#E0202B] font-bold text-sm">-{coupon.requiredPoints || 0} pts</p>
+                            <p className="text-xs text-green-600 font-medium mt-1">Successful</p>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          Redemption Date: N/A (Legacy Record)
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500 text-center py-4 bg-gray-50 rounded-lg">
+                    No redemption records found.
+                  </div>
+                )}
               </div>
             </div>
           )}
