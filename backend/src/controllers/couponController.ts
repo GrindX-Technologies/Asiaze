@@ -3,6 +3,22 @@ import mongoose from 'mongoose';
 import Coupon from '../models/Coupon';
 import User from '../models/User';
 
+import Redemption from '../models/Redemption';
+
+export const getAllRedemptions = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const redemptions = await Redemption.find()
+      .populate('user', 'name email referralId')
+      .populate('coupon', 'title requiredPoints discount type')
+      .populate('referredBy', 'name email referralId')
+      .sort({ createdAt: -1 });
+    
+    res.json(redemptions);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const getCoupons = async (req: Request, res: Response): Promise<void> => {
   try {
     const coupons = await Coupon.find({}).sort({ createdAt: -1 });
@@ -119,6 +135,15 @@ export const redeemCoupon = async (req: Request, res: Response): Promise<void> =
       }
       return;
     }
+
+    // Create redemption record
+    await Redemption.create({
+      user: new mongoose.Types.ObjectId(userId),
+      coupon: new mongoose.Types.ObjectId(couponId as string),
+      pointsUsed: coupon.requiredPoints,
+      referredBy: updatedUser.referredBy ? new mongoose.Types.ObjectId(updatedUser.referredBy.toString()) : undefined,
+      status: 'successful'
+    });
 
     res.json({ 
       message: 'Coupon successfully redeemed', 

@@ -1,8 +1,11 @@
 import express from 'express';
-import { getCoupons, createCoupon, updateCoupon, deleteCoupon, getActiveCoupons, redeemCoupon } from '../controllers/couponController';
+import { getCoupons, createCoupon, updateCoupon, deleteCoupon, getActiveCoupons, redeemCoupon, getAllRedemptions } from '../controllers/couponController';
 import { protect, admin } from '../middleware/authMiddleware';
 
 const router = express.Router();
+
+router.route('/redemptions')
+  .get(protect, admin, getAllRedemptions);
 
 router.route('/active')
   .get(protect, getActiveCoupons);

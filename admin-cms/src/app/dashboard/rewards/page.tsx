@@ -21,6 +21,10 @@ export default function RewardsManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isAddCouponModalOpen, setIsAddCouponModalOpen] = useState(false);
+  const [redemptions, setRedemptions] = useState<any[]>([]);
+  const [redemptionPage, setRedemptionPage] = useState(1);
+  const [redemptionSearch, setRedemptionSearch] = useState("");
+  const redemptionsPerPage = 10;
 
   // Add Coupon Form
   const [couponCode, setCouponCode] = useState("");
@@ -47,14 +51,20 @@ export default function RewardsManagementPage() {
     try {
       const token = getCookie("token");
       
-      const [couponsRes, settingsRes] = await Promise.all([
+      const [couponsRes, settingsRes, redemptionsRes] = await Promise.all([
         fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/coupons`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/settings`, { headers: { Authorization: `Bearer ${token}` } })
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/settings`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/coupons/redemptions`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
       if (couponsRes.ok) {
         const couponsData = await couponsRes.json();
         setCoupons(couponsData);
+      }
+
+      if (redemptionsRes.ok) {
+        const redemptionsData = await redemptionsRes.json();
+        setRedemptions(redemptionsData);
       }
 
       if (settingsRes.ok) {
@@ -260,6 +270,18 @@ export default function RewardsManagementPage() {
     }
   };
 
+  const filteredRedemptions = redemptions.filter((r) => 
+    r.user?.name?.toLowerCase().includes(redemptionSearch.toLowerCase()) ||
+    r.user?.email?.toLowerCase().includes(redemptionSearch.toLowerCase()) ||
+    r.coupon?.title?.toLowerCase().includes(redemptionSearch.toLowerCase())
+  );
+
+  const totalRedemptionPages = Math.ceil(filteredRedemptions.length / redemptionsPerPage);
+  const currentRedemptions = filteredRedemptions.slice(
+    (redemptionPage - 1) * redemptionsPerPage,
+    redemptionPage * redemptionsPerPage
+  );
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -371,6 +393,125 @@ export default function RewardsManagementPage() {
             </Table>
           </div>
         </div>
+      </div>
+
+      {/* Recent Reward Redemptions */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 pb-4 mb-4 gap-4">
+          <h3 className="text-xl font-bold text-black">Recent Reward Redemptions</h3>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input 
+                placeholder="Search user or reward..." 
+                className="pl-9 bg-gray-50 border-gray-200 w-full md:w-64 rounded-full"
+                value={redemptionSearch}
+                onChange={(e) => {
+                  setRedemptionSearch(e.target.value);
+                  setRedemptionPage(1);
+                }}
+              />
+            </div>
+            <Button onClick={fetchData} variant="outline" className="rounded-full border-gray-200">
+              Refresh
+            </Button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-[#F9FAFB]">
+              <TableRow className="hover:bg-transparent border-b border-gray-100">
+                <TableHead className="font-bold text-black py-3">Date</TableHead>
+                <TableHead className="font-bold text-black">User</TableHead>
+                <TableHead className="font-bold text-black">Reward</TableHead>
+                <TableHead className="font-bold text-black text-right">Points Used</TableHead>
+                <TableHead className="font-bold text-black">Referred By</TableHead>
+                <TableHead className="font-bold text-black text-center">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">Loading redemptions...</TableCell>
+                </TableRow>
+              ) : currentRedemptions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">No redemptions found.</TableCell>
+                </TableRow>
+              ) : (
+                currentRedemptions.map((redemption) => (
+                  <TableRow key={redemption._id} className="border-b border-gray-50">
+                    <TableCell className="text-gray-600 whitespace-nowrap">
+                      {new Date(redemption.createdAt).toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-gray-900">{redemption.user?.name || 'Unknown User'}</span>
+                        <span className="text-xs text-gray-500">{redemption.user?.email || 'N/A'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-semibold text-gray-800">{redemption.coupon?.title || 'Unknown Reward'}</span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className="font-bold text-[#E0202B]">-{redemption.pointsUsed} pts</span>
+                    </TableCell>
+                    <TableCell>
+                      {redemption.referredBy ? (
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-800">{redemption.referredBy.name}</span>
+                          <span className="text-xs text-gray-500">{redemption.referredBy.referralId}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400 italic">None</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge 
+                        className={`text-white border-none rounded-full px-3 py-0.5 font-medium ${
+                          redemption.status === 'successful' ? 'bg-[#22C55E]' : 
+                          redemption.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                      >
+                        {redemption.status ? redemption.status.charAt(0).toUpperCase() + redemption.status.slice(1) : 'Successful'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Pagination */}
+        {totalRedemptionPages > 1 && (
+          <div className="flex items-center justify-between mt-6 border-t border-gray-100 pt-4">
+            <span className="text-sm text-gray-500">
+              Showing {(redemptionPage - 1) * redemptionsPerPage + 1} to {Math.min(redemptionPage * redemptionsPerPage, filteredRedemptions.length)} of {filteredRedemptions.length} entries
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setRedemptionPage(p => Math.max(1, p - 1))}
+                disabled={redemptionPage === 1}
+                className="rounded-full"
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setRedemptionPage(p => Math.min(totalRedemptionPages, p + 1))}
+                disabled={redemptionPage === totalRedemptionPages}
+                className="rounded-full"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Add Coupon Modal */}
