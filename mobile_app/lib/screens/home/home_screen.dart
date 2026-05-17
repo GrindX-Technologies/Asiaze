@@ -12,7 +12,6 @@ import '../profile/profile_screen.dart';
 import '../stories/stories_screen.dart';
 import '../../services/api_service.dart';
 import '../../services/translation_service.dart';
-import '../../services/push_notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -60,7 +59,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     _initData();
-    PushNotificationService.initialize();
   }
 
   @override
@@ -458,8 +456,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         return Center(
           child: NewsCard(
             article: _feedData[index],
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => ArticleDetailScreen(
@@ -469,6 +467,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ),
               );
+
+              if (result == 'next_article') {
+                if (index < _feedData.length) {
+                  _pageController.nextPage(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeInOut,
+                  );
+                }
+              }
             },
           ),
         );

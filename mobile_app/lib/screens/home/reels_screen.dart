@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
@@ -113,7 +112,7 @@ class _ReelsScreenState extends State<ReelsScreen> {
               'source': 'SPONSOR',
               'time': 'Sponsored',
               'description': 'Sponsored Content',
-              'likes': '0',
+              'likes': ad['likes']?.toString() ?? '0',
               'videoUrl': ad['mediaUrl'],
               'articleLink': ad['linkUrl'],
             });
@@ -259,7 +258,6 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
   
   bool _isLiked = false;
   int _likeCount = 0;
-  bool _isLiking = false;
   
   late AnimationController _saveAnimController;
   late Animation<double> _scaleAnimation;
@@ -272,7 +270,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
   void initState() {
     super.initState();
     
-    _likeCount = int.tryParse(widget.reel['likes'].toString()) ?? 0;
+    _likeCount = int.tryParse(widget.reel['likes']?.toString() ?? '0') ?? 0;
     
     _saveAnimController = AnimationController(
       vsync: this,
@@ -337,7 +335,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
   }
 
   Future<void> _toggleLike() async {
-    if (_isLiking) return;
+    if (!mounted) return;
     
     final token = await ApiService.getToken();
     if (token == null || token.isEmpty) {
@@ -353,58 +351,55 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
       return;
     }
 
+    final String reelId = widget.reel['id']?.toString() ?? widget.reel['_id']?.toString() ?? '';
+    if (reelId.isEmpty) return;
+
+    final bool isAd = widget.reel['isAd'] == true;
+
+    // Optimistic UI update
     setState(() {
-      _isLiking = true;
       _isLiked = !_isLiked;
-      _likeCount = _isLiked ? _likeCount + 1 : math.max(0, _likeCount - 1);
+      _likeCount += _isLiked ? 1 : -1;
     });
 
     try {
-      final reelId = widget.reel['id'] ?? widget.reel['_id'] ?? '';
       Map<String, dynamic> response;
-      if (widget.reel['isAd'] == true) {
-        response = await ApiService.toggleLikeAd(reelId, _isLiked);
+      if (isAd) {
+        // Ads don't have a dedicated endpoint for reels vs stories, use the generic Ad like endpoint
+        response = await ApiService.toggleLikeAd(reelId, !_isLiked); // Pass original state
       } else {
-        response = await ApiService.toggleLikeReel(reelId, _isLiked);
+        response = await ApiService.toggleLikeReel(reelId, !_isLiked);
       }
       
-      // Update local storage
-      final prefs = await SharedPreferences.getInstance();
-      final key = widget.reel['isAd'] == true ? 'likedAds' : 'likedReels';
-      final likedItems = prefs.getStringList(key) ?? [];
-      if (_isLiked && !likedItems.contains(reelId)) {
-        likedItems.add(reelId);
-      } else if (!_isLiked && likedItems.contains(reelId)) {
-        likedItems.remove(reelId);
-      }
-      await prefs.setStringList(key, likedItems);
-
-      if (mounted && response['likes'] != null) {
+      // Update with confirmed server data
+      if (mounted) {
         setState(() {
-          _likeCount = int.tryParse(response['likes'].toString()) ?? _likeCount;
+          if (response['likes'] != null) {
+            _likeCount = int.tryParse(response['likes'].toString()) ?? _likeCount;
+          }
         });
+        
+        final prefs = await SharedPreferences.getInstance();
+        final key = isAd ? 'likedAds' : 'likedReels';
+        final likedItems = prefs.getStringList(key) ?? [];
+        
+        if (_isLiked && !likedItems.contains(reelId)) {
+          likedItems.add(reelId);
+        } else if (!_isLiked && likedItems.contains(reelId)) {
+          likedItems.remove(reelId);
+        }
+        await prefs.setStringList(key, likedItems);
       }
     } catch (e) {
-      debugPrint('Error toggling like: $e');
+      // Revert optimistic update on failure
       if (mounted) {
-        // Rollback optimistic update
         setState(() {
           _isLiked = !_isLiked;
-          _likeCount = _isLiked ? _likeCount + 1 : math.max(0, _likeCount - 1);
+          _likeCount += _isLiked ? 1 : -1;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update like: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 2),
-          ),
+          const SnackBar(content: Text('Failed to update like status')),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLiking = false;
-        });
       }
     }
   }

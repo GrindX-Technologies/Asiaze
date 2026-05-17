@@ -1,9 +1,13 @@
 import * as admin from 'firebase-admin';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
 
-// Look for the service account key
-const serviceAccountPath = '/Users/sagniksen/Desktop/ASIAZE/backend/asiaze2026-firebase-adminsdk-fbsvc-61a9410fd0.json';
+// Look for the service account key (production path takes priority)
+let serviceAccountPath = path.resolve(__dirname, '../../serviceAccountKey.json');
+if (!fs.existsSync(serviceAccountPath)) {
+  // Fallback for local development
+  serviceAccountPath = '/Users/sagniksen/Desktop/ASIAZE/backend/asiaze2026-firebase-adminsdk-fbsvc-61a9410fd0.json';
+}
 
 export const initFirebase = () => {
   try {

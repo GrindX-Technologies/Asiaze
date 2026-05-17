@@ -85,6 +85,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
     final prefs = await SharedPreferences.getInstance();
     _langCode = prefs.getString('selectedLanguage') ?? 'EN';
     final List<String> likedStories = prefs.getStringList('likedStories') ?? [];
+    final List<String> likedAds = prefs.getStringList('likedAds') ?? [];
 
     try {
       final data = await ApiService.getStories();
@@ -156,6 +157,8 @@ class _StoriesScreenState extends State<StoriesScreen> {
               id: ad['_id'] ?? 'ad_$adIndex',
               isAd: true,
               adLink: ad['linkUrl'],
+              likes: int.tryParse(ad['likes']?.toString() ?? '0') ?? 0,
+              isLikedByMe: likedAds.contains(ad['_id']),
               pages: [
                 StoryPageData(
                   imageUrl: url,
@@ -341,53 +344,72 @@ class _StoryGroupViewState extends State<StoryGroupView> with SingleTickerProvid
   }
 
   Future<void> _toggleLike() async {
+    if (!mounted) return;
+    
+    final token = await ApiService.getToken();
+    if (token == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please login to like content'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+
     // Optimistic UI update
     setState(() {
-      if (widget.storyGroup.isLikedByMe) {
-        widget.storyGroup.isLikedByMe = false;
-        widget.storyGroup.likes = (widget.storyGroup.likes > 0) ? widget.storyGroup.likes - 1 : 0;
-      } else {
-        widget.storyGroup.isLikedByMe = true;
-        widget.storyGroup.likes++;
-      }
+      widget.storyGroup.isLikedByMe = !widget.storyGroup.isLikedByMe;
+      widget.storyGroup.likes += widget.storyGroup.isLikedByMe ? 1 : -1;
     });
 
     try {
-      final updatedStory = await ApiService.toggleLikeStory(widget.storyGroup.id);
+      Map<String, dynamic> updatedStory;
+      if (widget.storyGroup.isAd) {
+        // Ads don't have a dedicated endpoint for reels vs stories, use the generic Ad like endpoint
+        updatedStory = await ApiService.toggleLikeAd(widget.storyGroup.id, !widget.storyGroup.isLikedByMe); // Pass original state
+      } else {
+        updatedStory = await ApiService.toggleLikeStory(widget.storyGroup.id);
+      }
       
-      // Update local storage
-      final prefs = await SharedPreferences.getInstance();
-      final likedStories = prefs.getStringList('likedStories') ?? [];
-      
+      // Update with confirmed server data
       if (mounted) {
+        final prefs = await SharedPreferences.getInstance();
         setState(() {
-          widget.storyGroup.likes = updatedStory['likes'] ?? widget.storyGroup.likes;
-          
-          if (widget.storyGroup.isLikedByMe && !likedStories.contains(widget.storyGroup.id)) {
-            likedStories.add(widget.storyGroup.id);
-          } else if (!widget.storyGroup.isLikedByMe && likedStories.contains(widget.storyGroup.id)) {
-            likedStories.remove(widget.storyGroup.id);
+          if (updatedStory['likes'] != null) {
+            widget.storyGroup.likes = int.tryParse(updatedStory['likes'].toString()) ?? widget.storyGroup.likes;
           }
-          prefs.setStringList('likedStories', likedStories);
+          
+          final key = widget.storyGroup.isAd ? 'likedAds' : 'likedStories';
+          final likedItems = prefs.getStringList(key) ?? [];
+          
+          if (widget.storyGroup.isLikedByMe && !likedItems.contains(widget.storyGroup.id)) {
+            likedItems.add(widget.storyGroup.id);
+          } else if (!widget.storyGroup.isLikedByMe && likedItems.contains(widget.storyGroup.id)) {
+            likedItems.remove(widget.storyGroup.id);
+          }
+          prefs.setStringList(key, likedItems);
         });
         StoryEventBus.broadcast({
-          'id': widget.storyGroup.id,
-          'likes': widget.storyGroup.likes,
-          'isLikedByMe': widget.storyGroup.isLikedByMe,
+          'type': 'story_like_updated',
+          'storyId': widget.storyGroup.id,
+          'isLiked': widget.storyGroup.isLikedByMe,
+          'likes': widget.storyGroup.likes
         });
       }
     } catch (e) {
-      debugPrint('Failed to toggle story like: $e');
       // Revert optimistic update on failure
-      setState(() {
-        if (widget.storyGroup.isLikedByMe) {
-          widget.storyGroup.isLikedByMe = false;
-          widget.storyGroup.likes = (widget.storyGroup.likes > 0) ? widget.storyGroup.likes - 1 : 0;
-        } else {
-          widget.storyGroup.isLikedByMe = true;
-          widget.storyGroup.likes++;
-        }
-      });
+      if (mounted) {
+        setState(() {
+          widget.storyGroup.isLikedByMe = !widget.storyGroup.isLikedByMe;
+          widget.storyGroup.likes += widget.storyGroup.isLikedByMe ? 1 : -1;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update like status')),
+        );
+      }
     }
   }
 

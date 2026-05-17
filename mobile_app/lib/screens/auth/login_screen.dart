@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../home/home_screen.dart';
 import 'signup_screen.dart';
 import '../../services/api_service.dart';
+import '../../services/push_notification_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -62,6 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await ApiService.login(email, password);
+      PushNotificationService.initialize();
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
@@ -122,6 +124,8 @@ class _LoginScreenState extends State<LoginScreen> {
         googleUser.photoUrl ?? '',
         googleUser.id,
       );
+
+      PushNotificationService.initialize();
 
       if (!mounted) return;
       Navigator.pushReplacement(

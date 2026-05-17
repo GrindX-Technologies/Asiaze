@@ -48,10 +48,62 @@ export const sendPushNotification = async (req: Request, res: Response): Promise
 
     const messaging = getMessaging();
 
+    // Default logo URL hosted on the backend
+    let defaultLogoUrl = 'https://asiaze.cloud/api/uploads/logo.png';
+    const fallbackLogoUrl = 'https://asiaze.cloud/api/uploads/app_icon.png';
+
+    // Verify logo URL accessibility with a quick HEAD request (logging errors if inaccessible)
+    try {
+      const https = require('https');
+      await new Promise<void>((resolve, reject) => {
+        const req = https.request(defaultLogoUrl, { method: 'HEAD', timeout: 3000 }, (res: any) => {
+          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 400) {
+            resolve();
+          } else {
+            console.warn(`[Logo Warning] Primary logo inaccessible. HTTP Status: ${res.statusCode}. Using fallback.`);
+            defaultLogoUrl = fallbackLogoUrl;
+            resolve();
+          }
+        });
+        req.on('error', (err: any) => {
+          console.error(`[Logo Error] Failed to reach primary logo URL: ${err.message}. Using fallback.`);
+          defaultLogoUrl = fallbackLogoUrl;
+          resolve();
+        });
+        req.on('timeout', () => {
+          console.error(`[Logo Timeout] Logo fetch timed out. Using fallback.`);
+          defaultLogoUrl = fallbackLogoUrl;
+          req.destroy();
+          resolve();
+        });
+        req.end();
+      });
+    } catch (e) {
+      defaultLogoUrl = fallbackLogoUrl;
+    }
+
     const messagePayload = {
       notification: {
         title,
         body,
+        imageUrl: defaultLogoUrl,
+      },
+      android: {
+        notification: {
+          icon: 'ic_notification',
+          color: '#E0202B',
+          imageUrl: defaultLogoUrl,
+        }
+      },
+      apns: {
+        payload: {
+          aps: {
+            'mutable-content': 1
+          }
+        },
+        fcmOptions: {
+          imageUrl: defaultLogoUrl,
+        }
       },
       data: {
         click_action: 'FLUTTER_NOTIFICATION_CLICK',

@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../setup/preferences_screen.dart';
 import '../../services/api_service.dart';
 import '../../constants/states.dart';
+import '../../services/push_notification_service.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -67,6 +68,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     try {
       await ApiService.register(name, email, password, _selectedState!, referralCode: referralCode.isNotEmpty ? referralCode : null);
+      PushNotificationService.initialize();
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
@@ -123,6 +125,8 @@ class _SignupScreenState extends State<SignupScreen> {
         googleUser.photoUrl ?? '',
         googleUser.id,
       );
+
+      PushNotificationService.initialize();
 
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(

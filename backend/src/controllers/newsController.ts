@@ -32,6 +32,22 @@ export const getNews = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+// @desc    Get single news
+// @route   GET /api/news/:id
+// @access  Public
+export const getNewsById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const news = await News.findById(req.params.id).populate('category author tags');
+    if (news) {
+      res.json(news);
+    } else {
+      res.status(404).json({ message: 'News not found' });
+    }
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Create news
 // @route   POST /api/news
 // @access  Private/Admin

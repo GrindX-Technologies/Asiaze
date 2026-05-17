@@ -225,7 +225,7 @@ export const updateDeviceToken = async (req: Request, res: Response): Promise<vo
   try {
     const { token } = req.body;
     
-    if (!token) {
+    if (token === undefined) {
       res.status(400).json({ message: 'Token is required' });
       return;
     }

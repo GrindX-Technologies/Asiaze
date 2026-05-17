@@ -9,6 +9,7 @@ import { useToken } from "@/components/TokenProvider";
 export default function SettingsPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState({ text: "", type: "" });
@@ -51,6 +52,12 @@ export default function SettingsPage() {
     try {
       const payload: any = { name, email };
       if (password) {
+        if (!currentPassword) {
+          setMessage({ text: "Please provide your current password to set a new password.", type: "error" });
+          setIsSavingProfile(false);
+          return;
+        }
+        payload.currentPassword = currentPassword;
         payload.password = password;
       }
 
@@ -70,6 +77,7 @@ export default function SettingsPage() {
           document.cookie = `token=${data.token}; path=/; max-age=2592000; SameSite=Lax; domain=.asiaze.cloud`;
         }
         setMessage({ text: "Profile updated successfully.", type: "success" });
+        setCurrentPassword("");
         setPassword("");
         setConfirmPassword("");
       } else {
@@ -115,6 +123,10 @@ export default function SettingsPage() {
             <div className="pt-2 border-t border-gray-100 mt-4">
               <p className="text-sm text-gray-500 mb-2">Leave blank if you don't want to change your password.</p>
               <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-black font-bold">Current Password</Label>
+                  <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter current password" className="bg-white border-gray-200" />
+                </div>
                 <div className="space-y-2">
                   <Label className="text-black font-bold">New Password</Label>
                   <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter new password" className="bg-white border-gray-200" />

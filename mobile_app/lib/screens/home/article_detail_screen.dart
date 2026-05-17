@@ -22,14 +22,17 @@ class ArticleDetailScreen extends StatefulWidget {
 }
 
 class _ArticleDetailScreenState extends State<ArticleDetailScreen> with SingleTickerProviderStateMixin {
-  late PageController _pageController;
   late int _currentIndex;
+  late PageController _pageController;
   bool _isSaved = false;
   bool _isLiked = false;
   late AnimationController _saveAnimController;
   late Animation<double> _scaleAnimation;
 
   bool _isLiking = false;
+
+  bool _isPopping = false;
+  double _overscrollAccumulator = 0.0;
 
   @override
   void initState() {
@@ -175,6 +178,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> with SingleTi
   @override
   void dispose() {
     _saveAnimController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -183,7 +187,34 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> with SingleTi
     final subtitle = article['excerpt'] ?? 'A new era of sustainable energy solutions is emerging, promising a cleaner and more efficient future.';
     final source = article['meta'] ?? 'Source: TechCrunch | Published: April 1, 2023, 10:00 AM';
 
-    return SingleChildScrollView(
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification notification) {
+        if (notification is ScrollUpdateNotification) {
+          if (notification.metrics.pixels >= notification.metrics.maxScrollExtent) {
+            if (notification.dragDetails != null && notification.scrollDelta != null && notification.scrollDelta! > 0) {
+              _overscrollAccumulator += notification.scrollDelta!;
+            }
+          } else {
+            _overscrollAccumulator = 0.0;
+          }
+        } else if (notification is OverscrollNotification) {
+          if (notification.dragDetails != null && notification.overscroll > 0) {
+            _overscrollAccumulator += notification.overscroll;
+          }
+        } else if (notification is ScrollEndNotification) {
+          _overscrollAccumulator = 0.0;
+        }
+
+        if (_overscrollAccumulator > 60.0) {
+          if (!_isPopping) {
+            _isPopping = true;
+            Navigator.pop(context, 'next_article');
+          }
+        }
+        return false;
+      },
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -282,7 +313,8 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> with SingleTi
             const SizedBox(height: 40),
           ],
         ),
-      );
+      ),
+    );
   }
 
   @override
@@ -315,24 +347,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> with SingleTi
           child: Divider(height: 1, color: Color(0xFFE2E8F0)),
         ),
       ),
-      body: widget.feedList != null && widget.feedList!.isNotEmpty
-          ? PageView.builder(
-              controller: _pageController,
-              scrollDirection: Axis.vertical,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentIndex = index;
-                  _isLiked = false;
-                });
-                _checkSavedStatus();
-              },
-              itemCount: widget.feedList!.length,
-              itemBuilder: (context, index) {
-                final article = widget.feedList![index]['mappedArticle'] ?? widget.feedList![index];
-                return _buildArticleView(article);
-              },
-            )
-          : _buildArticleView(widget.article),
+      body: _buildArticleView(_getCurrentArticle()),
       bottomNavigationBar: _buildBottomActionBar(),
     );
   }

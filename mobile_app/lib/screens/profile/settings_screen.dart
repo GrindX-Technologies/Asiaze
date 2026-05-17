@@ -8,6 +8,8 @@ import 'privacy_policy_screen.dart';
 import 'terms_screen.dart';
 import 'about_us_screen.dart';
 import '../../services/api_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import '../../services/push_notification_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -28,9 +30,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
+    
+    // Check actual system permission
+    final settings = await FirebaseMessaging.instance.getNotificationSettings();
+    final hasSystemPermission = settings.authorizationStatus == AuthorizationStatus.authorized;
+    
+    // Default to true, but if system permission is explicitly denied, force it to false
+    bool savedEnabled = prefs.getBool('notificationsEnabled') ?? true;
+    if (!hasSystemPermission && settings.authorizationStatus == AuthorizationStatus.denied && savedEnabled) {
+      savedEnabled = false;
+      await prefs.setBool('notificationsEnabled', false);
+    }
+    
+    if (mounted) {
+      setState(() {
+        _selectedLang = prefs.getString('selectedLanguage') ?? 'EN';
+        _notificationsEnabled = savedEnabled;
+      });
+    }
+  }
+
+  Future<void> _toggleNotifications(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _selectedLang = prefs.getString('selectedLanguage') ?? 'EN';
+      _notificationsEnabled = value;
     });
+
+    final success = await PushNotificationService.toggleNotifications(value);
+    
+    if (value && !success) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Notification permission denied. Please enable in device settings.')),
+        );
+      }
+      setState(() {
+        _notificationsEnabled = false;
+      });
+      await prefs.setBool('notificationsEnabled', false);
+    } else {
+      await prefs.setBool('notificationsEnabled', value);
+    }
   }
 
   @override
@@ -111,15 +151,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: _notificationsEnabled,
                 activeThumbColor: const Color(0xFFDC143C),
                 onChanged: (val) {
-                  setState(() {
-                    _notificationsEnabled = val;
-                  });
+                  _toggleNotifications(val);
                 },
               ),
               onTap: () {
-                setState(() {
-                  _notificationsEnabled = !_notificationsEnabled;
-                });
+                _toggleNotifications(!_notificationsEnabled);
               },
             ),
             

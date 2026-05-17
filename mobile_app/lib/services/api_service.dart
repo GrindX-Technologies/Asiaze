@@ -35,6 +35,11 @@ class ApiService {
 
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
+    try {
+      await updateDeviceToken(''); // Clear FCM token on backend before removing auth token
+    } catch (e) {
+      debugPrint('Failed to clear device token on logout: $e');
+    }
     await prefs.remove('token');
     await prefs.remove('userState');
     await prefs.remove('selectedCategories');
@@ -387,6 +392,22 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to load news');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getNewsById(String newsId) async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/news/$newsId'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token'
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load article');
     }
   }
 

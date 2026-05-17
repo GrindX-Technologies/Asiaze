@@ -84,59 +84,49 @@ export const deleteCoupon = async (req: Request, res: Response): Promise<void> =
 };
 
 export const redeemCoupon = async (req: Request, res: Response): Promise<void> => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const couponId = req.params.id;
     const userId = (req as any).user._id;
 
-    const coupon = await Coupon.findById(couponId).session(session);
+    const coupon = await Coupon.findById(couponId);
     if (!coupon || !coupon.isActive) {
-      await session.abortTransaction();
-      session.endSession();
       res.status(404).json({ message: 'Coupon not found or inactive' });
       return;
     }
 
-    const user = await User.findById(userId).session(session);
-    if (!user) {
-      await session.abortTransaction();
-      session.endSession();
-      res.status(404).json({ message: 'User not found' });
+    // Atomic update without requiring MongoDB Replica Sets (Transactions)
+    const updatedUser: any = await User.findOneAndUpdate(
+      { 
+        _id: userId, 
+        points: { $gte: coupon.requiredPoints },
+        redeemedCoupons: { $ne: couponId }
+      } as any,
+      {
+        $inc: { points: -coupon.requiredPoints, usedPoints: coupon.requiredPoints },
+        $addToSet: { redeemedCoupons: couponId }
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      const userCheck = await User.findById(userId);
+      if (!userCheck) {
+        res.status(404).json({ message: 'User not found' });
+      } else if (userCheck.redeemedCoupons && userCheck.redeemedCoupons.includes(couponId as any)) {
+        res.status(400).json({ message: 'Coupon already redeemed' });
+      } else {
+        res.status(400).json({ message: 'Insufficient points' });
+      }
       return;
     }
 
-    // Check if already redeemed
-    if (user.redeemedCoupons && user.redeemedCoupons.includes(couponId as any)) {
-      await session.abortTransaction();
-      session.endSession();
-      res.status(400).json({ message: 'Coupon already redeemed' });
-      return;
-    }
-
-    // Check points
-    if (user.points < coupon.requiredPoints) {
-      await session.abortTransaction();
-      session.endSession();
-      res.status(400).json({ message: 'Insufficient points' });
-      return;
-    }
-
-    // Deduct points, add to usedPoints, and add to redeemedCoupons
-    user.points -= coupon.requiredPoints;
-    user.usedPoints = (user.usedPoints || 0) + coupon.requiredPoints;
-    user.redeemedCoupons.push(couponId as any);
-
-    await user.save({ session });
-    
-    await session.commitTransaction();
-    session.endSession();
-
-    res.json({ message: 'Coupon successfully redeemed', points: user.points, usedPoints: user.usedPoints, redeemedCoupons: user.redeemedCoupons });
+    res.json({ 
+      message: 'Coupon successfully redeemed', 
+      points: updatedUser.points, 
+      usedPoints: updatedUser.usedPoints, 
+      redeemedCoupons: updatedUser.redeemedCoupons 
+    });
   } catch (error: any) {
-    await session.abortTransaction();
-    session.endSession();
     console.error('Error redeeming coupon:', error);
     res.status(500).json({ message: 'Failed to redeem coupon', error: error.message });
   }

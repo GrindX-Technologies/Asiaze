@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'onboarding_screen.dart';
 import 'home/home_screen.dart';
 import '../services/api_service.dart';
+import '../services/push_notification_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -28,6 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (token != null && token.isNotEmpty) {
       try {
         await ApiService.syncUserActivity();
+        PushNotificationService.initialize();
       } catch (e) {
         debugPrint("Error syncing user activity on startup: \$e");
       }

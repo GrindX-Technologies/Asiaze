@@ -236,6 +236,17 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
       }
       
       if (req.body.password) {
+        if (!req.body.currentPassword) {
+          res.status(400).json({ message: 'Current password is required to set a new password' });
+          return;
+        }
+
+        const isMatch = await user.matchPassword(req.body.currentPassword);
+        if (!isMatch) {
+          res.status(401).json({ message: 'Invalid current password' });
+          return;
+        }
+
         user.password = req.body.password;
       }
 
