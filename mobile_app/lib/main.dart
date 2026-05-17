@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart';
 import 'screens/splash_screen.dart';
+import 'services/deep_link_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -26,6 +27,8 @@ void main() async {
   } catch (e) {
     debugPrint('Failed to initialize Firebase: $e');
   }
+  
+  DeepLinkService().initialize();
   
   runApp(const AsiazeApp());
 }

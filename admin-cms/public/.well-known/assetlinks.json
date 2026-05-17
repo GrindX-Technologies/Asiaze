@@ -1,0 +1,11 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.asiaze.mobile_app",
+    "sha256_cert_fingerprints": [
+      "2F:F5:65:42:E5:0A:43:12:3F:2B:7F:DA:9B:28:08:18:0C:F3:4F:FB:4D:E2:8F:2E:F2:2E:70:5C:46:D2:17:32",
+      "22:E3:D9:F2:5B:5B:F7:49:6D:C8:66:BB:01:EB:FB:5F:1D:D5:11:FF:64:73:E1:49:E9:05:F9:1A:95:2D:B7:73"
+    ]
+  }
+}]
