@@ -206,16 +206,30 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           'coverImage': item['coverImage'],
           'content': content,
           'categoryName': categoryName,
+          'createdAtRaw': item['createdAt'], // Store raw for sorting
         });
       }
       
       if (englishTab == 'My Feed') {
         mappedData.sort((a, b) {
-          bool aIsSelected = _selectedCategories.contains(a['categoryName']);
-          bool bIsSelected = _selectedCategories.contains(b['categoryName']);
-          if (aIsSelected && !bIsSelected) return -1;
-          if (!aIsSelected && bIsSelected) return 1;
-          return 0; // Keep original date sort if both match or both don't match
+          DateTime parseDate(dynamic dateRaw, dynamic id) {
+            if (dateRaw == null) {
+              debugPrint('Validation Log: Missing timestamp for article $id');
+              return DateTime.fromMillisecondsSinceEpoch(0);
+            }
+            try {
+              return DateTime.parse(dateRaw.toString());
+            } catch (e) {
+              debugPrint('Validation Log: Invalid timestamp "$dateRaw" for article $id');
+              return DateTime.fromMillisecondsSinceEpoch(0);
+            }
+          }
+
+          DateTime dateA = parseDate(a['createdAtRaw'], a['id']);
+          DateTime dateB = parseDate(b['createdAtRaw'], b['id']);
+
+          // Sort descending: most recent first
+          return dateB.compareTo(dateA);
         });
       }
 
@@ -495,6 +509,29 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           fit: BoxFit.contain,
         ),
       ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh, color: Colors.black),
+          tooltip: 'Refresh Feed',
+          onPressed: () async {
+            setState(() => _isRefreshing = true);
+            try {
+              await _fetchFeed();
+              if (mounted) {
+                _pageController.animateToPage(
+                  0,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
+              }
+            } finally {
+              if (mounted) {
+                setState(() => _isRefreshing = false);
+              }
+            }
+          },
+        ),
+      ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(76), // 40 for tabs + 36 for ticker
         child: Column(
