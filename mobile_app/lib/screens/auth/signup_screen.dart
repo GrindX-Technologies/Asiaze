@@ -172,14 +172,21 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 40),
               // Logo
-              Image.asset(
-                'assets/images/logo.png',
-                width: 200, // Explicit width for the horizontal text logo
-                fit: BoxFit.contain,
+              Container(
+                width: 150,
+                height: 150,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  fit: BoxFit.cover,
+                ),
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 60),
               // Full Name Field
               TextField(
                 controller: _fullNameController,
