@@ -103,7 +103,7 @@ class _SignupScreenState extends State<SignupScreen> {
     });
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn(
-        serverClientId: const String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: ''),
+        serverClientId: const String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: '1085625342541-fh9f05a4h7s5tuck15fuh36m3gcshbpj.apps.googleusercontent.com'),
       );
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 

@@ -102,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // NOTE: serverClientId MUST match the GOOGLE_CLIENT_ID used in the backend.
       // You must provide it via configuration.
       final GoogleSignIn googleSignIn = GoogleSignIn(
-        serverClientId: const String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: ''),
+        serverClientId: const String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: '1085625342541-fh9f05a4h7s5tuck15fuh36m3gcshbpj.apps.googleusercontent.com'),
       );
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
