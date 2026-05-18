@@ -25,7 +25,6 @@ class _ReelsScreenState extends State<ReelsScreen> {
   // Translated UI Strings
   String _tNoReels = 'No reels available right now';
   String _tAllCaughtUp = 'You\'re all caught up!';
-  String _tSwipeUp = 'Swipe up';
   String _tTapToOpen = 'Tap to open article';
 
   @override
@@ -43,7 +42,6 @@ class _ReelsScreenState extends State<ReelsScreen> {
     if (_langCode != 'EN') {
       _tNoReels = await TranslationService.translateText('No reels available right now', _langCode);
       _tAllCaughtUp = await TranslationService.translateText('You\'re all caught up!', _langCode);
-      _tSwipeUp = await TranslationService.translateText('Swipe up', _langCode);
       _tTapToOpen = await TranslationService.translateText('Tap to open article', _langCode);
     }
     
@@ -224,7 +222,6 @@ class _ReelsScreenState extends State<ReelsScreen> {
                       }
                       return ReelVideoPlayer(
                         reel: _reelsData[index],
-                        tSwipeUp: _tSwipeUp,
                         tTapToOpen: _tTapToOpen,
                       );
                     },
@@ -236,13 +233,11 @@ class _ReelsScreenState extends State<ReelsScreen> {
 
 class ReelVideoPlayer extends StatefulWidget {
   final Map<String, dynamic> reel;
-  final String tSwipeUp;
   final String tTapToOpen;
 
   const ReelVideoPlayer({
     super.key, 
     required this.reel,
-    required this.tSwipeUp,
     required this.tTapToOpen,
   });
 
@@ -718,19 +713,6 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const SizedBox.shrink(), // Preserves layout alignment after removing the sticky counter
-              Row(
-                children: [
-                  Text(
-                    widget.tSwipeUp,
-                    style: GoogleFonts.roboto(
-                      color: Colors.white,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.keyboard_arrow_up, color: Colors.white, size: 16),
-                ],
-              ),
               if (widget.reel['articleLink'] != null && widget.reel['articleLink'].toString().isNotEmpty)
                 ElevatedButton(
                   onPressed: () async {
