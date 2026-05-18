@@ -1,0 +1,14 @@
+◇ injected env (5) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+Registered, token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhMGFmOWJmN2UyZDJiYzY1NDdlM2YyMSIsImlhdCI6MTc3OTEwNDE5MSwiZXhwIjoxNzgxNjk2MTkxfQ.pg97laDP1Ctv16z68EOSPyhlAzWij00fcHpHBvWn6vs
+Initial Points: 0
+
+--- Sharing Item 1 ---
+Share 1 result: { message: 'Points added successfully', points: 10, added: 10 }
+Points after Share 1: 10
+
+--- Sharing Item 1 Again (Duplicate) ---
+Duplicate share failed as expected. Message: Item already shared. Points are awarded only once per item.
+
+--- Sharing Item 2 ---
+Share 2 result: { message: 'Points added successfully', points: 20, added: 10 }
+Points after Share 2: 20
