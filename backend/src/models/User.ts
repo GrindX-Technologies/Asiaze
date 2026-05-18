@@ -23,6 +23,11 @@ export interface IUser extends Document {
   likedReels: mongoose.Types.ObjectId[];
   likedAds: mongoose.Types.ObjectId[];
   redeemedCoupons: mongoose.Types.ObjectId[];
+  sharedItems: Array<{
+    itemId: string;
+    itemType: string;
+    sharedAt: Date;
+  }>;
   loginHistory: Array<{
     ip: string;
     device: string;
@@ -56,6 +61,13 @@ const userSchema = new Schema(
     likedReels: [{ type: Schema.Types.ObjectId, ref: 'Reel' }],
     likedAds: [{ type: Schema.Types.ObjectId, ref: 'Ad' }],
     redeemedCoupons: [{ type: Schema.Types.ObjectId, ref: 'Coupon' }],
+    sharedItems: [
+      {
+        itemId: { type: String, required: true },
+        itemType: { type: String, required: true },
+        sharedAt: { type: Date, default: Date.now }
+      }
+    ],
     loginHistory: [
       {
         ip: { type: String },

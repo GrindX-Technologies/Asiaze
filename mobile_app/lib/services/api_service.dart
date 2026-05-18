@@ -184,6 +184,30 @@ class ApiService {
       debugPrint("Failed to sync user activity: $e");
     }
   }
+  static Future<Map<String, dynamic>> addSharePoints(String itemId, String itemType) async {
+    final token = await getToken();
+    if (token == null) throw Exception('No token found');
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/users/share'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'itemId': itemId,
+        'itemType': itemType
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? 'Failed to add share points');
+    }
+  }
+
   static Future<Map<String, dynamic>> getProfile() async {
     final token = await getToken();
     final response = await http.get(

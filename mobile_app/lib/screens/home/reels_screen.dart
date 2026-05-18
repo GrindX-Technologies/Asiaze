@@ -404,10 +404,33 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> with SingleTickerProv
     }
   }
 
-  void _shareReel() {
+  void _shareReel() async {
     final String url = 'https://asiaze.cloud/reel/${widget.reel['id']}';
-    // ignore: deprecated_member_use
-    Share.share('Check out this reel on ASIAZE:\n$url');
+    final result = await Share.share('Check out this reel on ASIAZE:\n$url');
+    
+    if (result.status == ShareResultStatus.success) {
+      try {
+        final res = await ApiService.addSharePoints(widget.reel['id'].toString(), 'reel');
+        if (mounted && res.containsKey('added')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Successfully shared! You earned ${res['added']} points.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('Failed to award share points: $e');
+        if (mounted && e.toString().contains('already shared')) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You have already received points for sharing this reel.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    }
   }
 
   void _toggleMute() {

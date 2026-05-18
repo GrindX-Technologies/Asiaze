@@ -161,11 +161,35 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> with SingleTi
     }
   }
 
-  void _shareArticle() {
+  void _shareArticle() async {
     final currentArticle = _getCurrentArticle();
     final String url = 'https://asiaze.cloud/article/${currentArticle['id'] ?? ''}';
-    // ignore: deprecated_member_use
-    Share.share('Check out this article on ASIAZE:\n$url');
+    final result = await Share.share('Check out this article on ASIAZE:\n$url');
+    
+    if (result.status == ShareResultStatus.success) {
+      try {
+        final res = await ApiService.addSharePoints(currentArticle['id'].toString(), 'article');
+        if (mounted && res.containsKey('added')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Successfully shared! You earned ${res['added']} points.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('Failed to award share points: $e');
+        // If error message indicates already shared, we can optionally notify user
+        if (mounted && e.toString().contains('already shared')) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You have already received points for sharing this article.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Map<String, dynamic> _getCurrentArticle() {

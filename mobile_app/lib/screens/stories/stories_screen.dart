@@ -413,11 +413,34 @@ class _StoryGroupViewState extends State<StoryGroupView> with SingleTickerProvid
     }
   }
 
-  void _shareStory() {
+  void _shareStory() async {
     final String deepLink = 'https://asiaze.cloud/stories/${widget.storyGroup.id}';
     final String title = widget.storyGroup.pages[_currentIndex].title;
-    // ignore: deprecated_member_use
-    Share.share('Check out this story: $title\n$deepLink');
+    final result = await Share.share('Check out this story: $title\n$deepLink');
+    
+    if (result.status == ShareResultStatus.success) {
+      try {
+        final res = await ApiService.addSharePoints(widget.storyGroup.id, 'story');
+        if (mounted && res.containsKey('added')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Successfully shared! You earned ${res['added']} points.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('Failed to award share points: $e');
+        if (mounted && e.toString().contains('already shared')) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You have already received points for sharing this story.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    }
   }
 
   @override

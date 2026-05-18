@@ -6,13 +6,29 @@ import User from '../models/User';
 // @access  Private
 export const addSharePoints = async (req: Request, res: Response): Promise<void> => {
   try {
+    const { itemId, itemType } = req.body;
+    
+    if (!itemId || !itemType) {
+      res.status(400).json({ message: 'itemId and itemType are required' });
+      return;
+    }
+
     const user = await User.findById((req as any).user._id);
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
     }
 
-    // Check if item was already shared recently to prevent spam (simple debounce could be implemented here, skipping for basic scope)
+    // Check if this exact item was already shared by this user
+    const alreadyShared = user.sharedItems?.find(
+      (item) => item.itemId === itemId && item.itemType === itemType
+    );
+
+    if (alreadyShared) {
+      res.status(400).json({ message: 'Item already shared. Points are awarded only once per item.' });
+      return;
+    }
+
     // Fetch points_for_sharing from settings
     let pointsToAdd = 15; // default fallback
     try {
@@ -29,9 +45,19 @@ export const addSharePoints = async (req: Request, res: Response): Promise<void>
     const MAX_POINTS = 10000000;
     user.points = Math.min(MAX_POINTS, Math.max(0, user.points + pointsToAdd));
     
+    // Log the share
+    if (!user.sharedItems) {
+      user.sharedItems = [];
+    }
+    user.sharedItems.push({
+      itemId,
+      itemType,
+      sharedAt: new Date()
+    });
+
     await user.save();
 
-    res.json({ message: 'Points added successfully', points: user.points });
+    res.json({ message: 'Points added successfully', points: user.points, added: pointsToAdd });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
