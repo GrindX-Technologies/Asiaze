@@ -156,9 +156,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F9FA), // light gray background matching image
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -174,8 +174,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         centerTitle: true,
         bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+          preferredSize: Size.fromHeight(0),
+          child: SizedBox(),
         ),
       ),
       body: _isLoading 
@@ -298,63 +298,84 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 40),
               
               // Menu List
-            _buildMenuItem(
-              icon: Icons.bookmark,
-              title: 'Saved Articles',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SavedArticlesScreen()),
-                );
-              },
-            ),
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
-            _buildMenuItem(
-              icon: Icons.video_library,
-              title: 'Saved Reels',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SavedReelsScreen()),
-                );
-              },
-            ),
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
-            _buildMenuItem(
-              icon: Icons.card_giftcard,
-              title: 'Reward Points',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const RewardsScreen()),
-                );
-              },
-            ),
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
-            _buildMenuItem(
-              icon: Icons.settings,
-              title: 'Settings',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
-                );
-              },
-            ),
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
-            _buildMenuItem(
-              icon: Icons.location_on,
-              title: 'Your State :',
-              trailing: _userProfile?['state'] ?? 'Not set',
-              onTap: () {
-                if (_userProfile != null) {
-                  _showStateSelectionBottomSheet();
-                }
-              },
-            ),
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(8),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      _buildMenuItem(
+                        icon: Icons.bookmark,
+                        title: 'Saved Articles',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SavedArticlesScreen()),
+                          );
+                        },
+                      ),
+                      const Divider(height: 1, color: Color(0xFFECEDEF)),
+                      _buildMenuItem(
+                        icon: Icons.movie_creation, // Clapperboard/Reel style icon
+                        title: 'Saved Reels',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SavedReelsScreen()),
+                          );
+                        },
+                      ),
+                      const Divider(height: 1, color: Color(0xFFECEDEF)),
+                      _buildMenuItem(
+                        icon: Icons.card_giftcard,
+                        title: 'Reward Points',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const RewardsScreen()),
+                          );
+                        },
+                      ),
+                      const Divider(height: 1, color: Color(0xFFECEDEF)),
+                      _buildMenuItem(
+                        icon: Icons.settings,
+                        title: 'Settings',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                          );
+                        },
+                      ),
+                      const Divider(height: 1, color: Color(0xFFECEDEF)),
+                      _buildMenuItem(
+                        icon: Icons.location_on,
+                        title: 'Your State :',
+                        trailing: _userProfile?['state'] ?? 'Not set',
+                        showArrow: false,
+                        onTap: () {
+                          if (_userProfile != null) {
+                            _showStateSelectionBottomSheet();
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             
-            const SizedBox(height: 60),
+            const SizedBox(height: 40),
             // Logout Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -378,13 +399,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    elevation: 0,
+                    elevation: 4,
+                    shadowColor: const Color(0xFFDC143C).withAlpha(60),
                   ),
                   child: Text(
                     'Logout',
                     style: GoogleFonts.lexendDeca(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -402,32 +424,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String title,
     String? trailing,
     required VoidCallback onTap,
+    bool showArrow = true,
   }) {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFFDC143C), size: 24),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: const BoxDecoration(
+                color: Color(0xFFFDE8ED),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: const Color(0xFFDC143C), size: 24),
+            ),
             const SizedBox(width: 16),
-            Text(
-              title,
-              style: GoogleFonts.roboto(
-                fontSize: 16,
-                color: Colors.black,
+            Expanded(
+              child: Row(
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.lexendDeca(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF111111),
+                    ),
+                  ),
+                  if (trailing != null) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      trailing,
+                      style: GoogleFonts.lexendDeca(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFFDC143C),
+                      ),
+                    ),
+                  ]
+                ],
               ),
             ),
-            if (trailing != null) ...[
-              const SizedBox(width: 8),
-              Text(
-                trailing,
-                style: GoogleFonts.roboto(
-                  fontSize: 16,
-                  color: const Color(0xFFDC143C),
-                ),
-              ),
-            ]
+            if (showArrow)
+              const Icon(Icons.chevron_right, color: Color(0xFF111111), size: 24),
           ],
         ),
       ),
