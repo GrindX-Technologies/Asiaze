@@ -400,48 +400,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     },
                     child: _buildFeed(),
                   ),
-                  // "Load New Feed" Pill (Shows only during pull-to-refresh)
-                  if (_isRefreshing && _feedData.isNotEmpty)
-                    SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF333333),
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withAlpha(26),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 4),
-                                )
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                RotationTransition(
-                                  turns: _spinController,
-                                  child: const Icon(Icons.refresh, color: Colors.white, size: 18),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _tLoadNewFeed,
-                                  style: GoogleFonts.roboto(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -453,7 +411,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildFeed() {
-    if (_isLoading) {
+    if (_isLoading && _feedData.isEmpty) {
       return const Center(
         child: CircularProgressIndicator(color: Color(0xFFDC143C)),
       );
