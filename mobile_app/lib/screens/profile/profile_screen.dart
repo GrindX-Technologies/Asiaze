@@ -444,6 +444,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(width: 16),
             Expanded(
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
@@ -455,12 +456,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   if (trailing != null) ...[
                     const SizedBox(width: 4),
-                    Text(
-                      trailing,
-                      style: GoogleFonts.lexendDeca(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFFDC143C),
+                    Expanded(
+                      child: Text(
+                        trailing,
+                        style: GoogleFonts.lexendDeca(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFFDC143C),
+                        ),
+                        softWrap: true,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ]
