@@ -284,25 +284,82 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         if (didPop) return;
         final shouldPop = await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Text(
-              'Exit App',
-              style: GoogleFonts.lexendDeca(fontWeight: FontWeight.bold),
+          builder: (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            content: Text(
-              'Are you sure you want to close the app?',
-              style: GoogleFonts.roboto(),
+            elevation: 4,
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Exit App',
+                    style: GoogleFonts.lexendDeca(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF111111),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Are you sure you want to close the app?',
+                    style: GoogleFonts.roboto(
+                      fontSize: 16,
+                      color: const Color(0xFF4B5563),
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          'No',
+                          style: GoogleFonts.roboto(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF64748B),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFDC143C),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          'Yes',
+                          style: GoogleFonts.roboto(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text('No', style: GoogleFonts.roboto(color: Colors.black)),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text('Yes', style: GoogleFonts.roboto(color: const Color(0xFFDC143C))),
-              ),
-            ],
           ),
         );
         if (shouldPop ?? false) {
