@@ -151,7 +151,7 @@ class ApiService {
 
       // Sync saved articles
       if (profile['savedNews'] != null) {
-        List<Map<String, dynamic>> savedArticles = (profile['savedNews'] as List).map((item) {
+        List<Map<String, dynamic>> savedArticles = (profile['savedNews'] as List).reversed.map((item) {
           return {
             'id': item['_id']?.toString() ?? '',
             'title': item['title'] ?? 'No Title',
@@ -166,7 +166,7 @@ class ApiService {
 
       // Sync saved reels
       if (profile['savedReels'] != null) {
-        List<Map<String, dynamic>> savedReels = (profile['savedReels'] as List).map((item) {
+        List<Map<String, dynamic>> savedReels = (profile['savedReels'] as List).reversed.map((item) {
           return {
             'id': item['_id']?.toString() ?? '',
             'videoUrl': item['videoUrl'],
